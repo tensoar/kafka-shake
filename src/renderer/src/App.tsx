@@ -3,9 +3,7 @@ import Main from './components/Main'
 
 export default function App(): React.JSX.Element {
     return (
-        <ConfigProvider
-            theme={{ algorithm: theme.defaultAlgorithm }}
-        >
+        <ConfigProvider theme={{ algorithm: theme.defaultAlgorithm }}>
             <Main />
         </ConfigProvider>
     )
