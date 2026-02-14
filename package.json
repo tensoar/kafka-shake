@@ -22,7 +22,11 @@
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
-    "@electron-toolkit/utils": "^4.0.0"
+    "@electron-toolkit/utils": "^4.0.0",
+    "@reduxjs/toolkit": "^2.11.2",
+    "@types/lodash": "^4.17.23",
+    "lodash": "^4.17.23",
+    "react-redux": "^9.2.0"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "^3.0.0",

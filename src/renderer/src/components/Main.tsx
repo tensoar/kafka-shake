@@ -1,7 +1,7 @@
 import { Layout, theme } from 'antd'
 import { Content } from 'antd/es/layout/layout'
-import SiderMain from './sider/SiderMain';
-import Sider from 'antd/es/layout/Sider';
+import SiderMain from './sider/SiderMain'
+import Sider from 'antd/es/layout/Sider'
 
 export default function Main(): React.JSX.Element {
     const {
@@ -13,7 +13,7 @@ export default function Main(): React.JSX.Element {
             style={{
                 height: '100vh',
                 width: '100vw',
-                padding: '0px 10px 10px 10px',
+                padding: '5px 5px 5px 5px',
                 background: colorBgLayout
             }}
         >
@@ -23,7 +23,7 @@ export default function Main(): React.JSX.Element {
                     height: '100%',
                     borderRadius: borderRadiusLG,
                     overflow: 'hidden',
-                    background: colorBgLayout,
+                    background: colorBgLayout
                 }}
             >
                 <SiderMain />

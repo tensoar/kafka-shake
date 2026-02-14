@@ -1,11 +1,24 @@
-import { Button, Col, Row, Space, theme, Typography } from 'antd'
-import { DeleteOutlined, MoonOutlined, PlusOutlined, SunOutlined } from '@ant-design/icons'
+import { Button, Col, Row, Space, theme, Tooltip, Typography } from 'antd'
+import {
+    DeleteOutlined,
+    GithubOutlined,
+    MoonOutlined,
+    PlusOutlined,
+    SunOutlined
+} from '@ant-design/icons'
 import KafkaFullLogo from '../svg/KafkaFullLogo'
+import { useDispatch, useSelector } from 'react-redux'
+import { RootState } from '../../redux/store'
+import { actions } from '@renderer/redux/actions'
+import _ from 'lodash'
 
 export default function SiderHeader(): React.JSX.Element {
     const {
         token: { colorBgContainer, borderRadiusLG }
     } = theme.useToken()
+    const themeStyle = useSelector((state: RootState) => state.theme.themeStyle)
+    const dispatch = useDispatch()
+    const reversedThemeStyle = themeStyle === 'light' ? 'dark' : 'light'
 
     return (
         <div
@@ -39,24 +52,40 @@ export default function SiderHeader(): React.JSX.Element {
                     marginTop: -25
                 }}
             >
-                <Button
-                    icon={<PlusOutlined />}
-                    shape="square"
-                    size="small"
-                    style={{ borderRadius: '20%' }}
-                />
-                <Button
-                    icon={<DeleteOutlined />}
-                    shape="square"
-                    size="small"
-                    style={{ borderRadius: '20%' }}
-                />
-                <Button
-                    icon={<MoonOutlined />}
-                    shape="square"
-                    size="small"
-                    style={{ borderRadius: '20%' }}
-                />
+                <Tooltip title="Add New Broker">
+                    <Button
+                        icon={<PlusOutlined />}
+                        shape="square"
+                        size="small"
+                        style={{ borderRadius: '20%' }}
+                    />
+                </Tooltip>
+                <Tooltip title="Delete Selected Brokers">
+                    <Button
+                        icon={<DeleteOutlined />}
+                        shape="square"
+                        size="small"
+                        style={{ borderRadius: '20%' }}
+                    />
+                </Tooltip>
+                <Tooltip title={`Change To ${_.upperFirst(reversedThemeStyle)} Mode`}>
+                    <Button
+                        icon={themeStyle === 'dark' ? <SunOutlined /> : <MoonOutlined />}
+                        shape="square"
+                        size="small"
+                        style={{ borderRadius: '20%' }}
+                        onClick={() => dispatch(actions.theme.setThemeStyle(reversedThemeStyle))}
+                    />
+                </Tooltip>
+                <Tooltip title="Open Github">
+                    <Button
+                        icon={<GithubOutlined />}
+                        shape="square"
+                        size="small"
+                        style={{ borderRadius: '20%' }}
+                        onClick={() => window.open('https://github.com/tensoar')}
+                    />
+                </Tooltip>
             </Space>
         </div>
     )
