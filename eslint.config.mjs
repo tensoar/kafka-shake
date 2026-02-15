@@ -6,27 +6,35 @@ import eslintPluginReactHooks from 'eslint-plugin-react-hooks'
 import eslintPluginReactRefresh from 'eslint-plugin-react-refresh'
 
 export default defineConfig(
-  { ignores: ['**/node_modules', '**/dist', '**/out'] },
-  tseslint.configs.recommended,
-  eslintPluginReact.configs.flat.recommended,
-  eslintPluginReact.configs.flat['jsx-runtime'],
-  {
-    settings: {
-      react: {
-        version: 'detect'
-      }
-    }
-  },
-  {
-    files: ['**/*.{ts,tsx}'],
-    plugins: {
-      'react-hooks': eslintPluginReactHooks,
-      'react-refresh': eslintPluginReactRefresh
+    { ignores: ['**/node_modules', '**/dist', '**/out'] },
+    tseslint.configs.recommended,
+    eslintPluginReact.configs.flat.recommended,
+    eslintPluginReact.configs.flat['jsx-runtime'],
+    {
+        settings: {
+            react: {
+                version: 'detect'
+            }
+        }
     },
-    rules: {
-      ...eslintPluginReactHooks.configs.recommended.rules,
-      ...eslintPluginReactRefresh.configs.vite.rules
-    }
-  },
-  eslintConfigPrettier
+    {
+        files: ['**/*.{ts,tsx}'],
+        plugins: {
+            'react-hooks': eslintPluginReactHooks,
+            'react-refresh': eslintPluginReactRefresh
+        },
+        rules: {
+            ...eslintPluginReactHooks.configs.recommended.rules,
+            ...eslintPluginReactRefresh.configs.vite.rules,
+            '@typescript-eslint/explicit-function-return-type': 'off',
+            '@typescript-eslint/restrict-template-expressions': 'off',
+            '@typescript-eslint/restrict-plus-operands': 'off',
+            '@typescript-eslint/no-unused-vars': 'off',
+            '@typescript-eslint/prefer-for-of': 'error',
+            '@typescript-eslint/prefer-function-type': 'error',
+            '@typescript-eslint/prefer-namespace-keyword': 'error',
+            '@typescript-eslint/quotes': 'off'
+        }
+    },
+    eslintConfigPrettier
 )

@@ -11,6 +11,8 @@ import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '../../redux/store'
 import { actions } from '@renderer/redux/actions'
 import _ from 'lodash'
+import ServiceProxy from '@renderer/util/ServiceProxy'
+import IKafkaClusterService from '@shared/service/IKafkaClusterService'
 
 export default function SiderHeader(): React.JSX.Element {
     const {
@@ -58,6 +60,11 @@ export default function SiderHeader(): React.JSX.Element {
                         shape="square"
                         size="small"
                         style={{ borderRadius: '20%' }}
+                        onClick={async () => {
+                            const service =
+                                ServiceProxy.get<IKafkaClusterService>('KafkaClusterService')
+                            console.log(await service.findAll())
+                        }}
                     />
                 </Tooltip>
                 <Tooltip title="Delete Selected Brokers">

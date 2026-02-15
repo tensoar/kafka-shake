@@ -1,7 +1,12 @@
+import 'reflect-metadata'
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import DataSourceManager from './db/DataSourceManager'
+import KafkaClusterService from './db/service/KafkaClusterService'
+import AbsKafkaCluster from '@shared/entity/AbsKafkaCluster'
+import ServiceRegistry from './db/ServiceRegistry'
 
 function createWindow(): void {
     // Create the browser window.
@@ -38,9 +43,9 @@ function createWindow(): void {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
     // Set app user model id for windows
-    electronApp.setAppUserModelId('com.electron')
+    electronApp.setAppUserModelId('ink.labrador.kafka-shake')
 
     // Default open or close DevTools by F12 in development
     // and ignore CommandOrControl + R in production.
@@ -51,6 +56,22 @@ app.whenReady().then(() => {
 
     // IPC test
     ipcMain.on('ping', () => console.log('pong'))
+    ipcMain.handle('call-service', async (__, { serviceName, method, args }) => {
+        const service = ServiceRegistry.getService(serviceName)
+        if (typeof service[method] !== 'function') {
+            throw new Error(`Method ${method} not found on service ${serviceName}`);
+        }
+        // eslint-disable-next-line prefer-spread
+        return await service[method].apply(service, args)
+    })
+
+    if (!(await DataSourceManager.initialize())) {
+        console.log('Initialize DB failed ...')
+    } else {
+        console.log('DB initlized ...')
+    }
+
+    ServiceRegistry.register(KafkaClusterService.name, KafkaClusterService.instance())
 
     createWindow()
 
