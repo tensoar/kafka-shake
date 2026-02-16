@@ -26,7 +26,9 @@ export default function SiderHeader(): React.JSX.Element {
     const themeStyle = useSelector((state: RootState) => state.theme.themeStyle)
     const dispatch = useDispatch()
     const reversedThemeStyle = themeStyle === 'light' ? 'dark' : 'light'
-    const kafkaClusterService = ServiceProxy.get<IKafkaClusterService>(ServiceName.KAFKA_CLUSTER_SERVICE)
+    const kafkaClusterService = ServiceProxy.get<IKafkaClusterService>(
+        ServiceName.KAFKA_CLUSTER_SERVICE
+    )
 
     const [addClusterForm] = Form.useForm<AddClusterFormValues>()
     const [addClusterModeOpen, setAddClusterModeOpen] = useState(false)
@@ -44,9 +46,10 @@ export default function SiderHeader(): React.JSX.Element {
         console.log('cluster: ', cluster)
 
         try {
-            await kafkaClusterService.saveOne(cluster)
+            const clusterAdded = await kafkaClusterService.saveOne(cluster)
             message.success('Add kafka cluster success')
-            console.log('cluster: ', cluster)
+            console.log('cluster: ', clusterAdded)
+            dispatch(actions.kafkaCluster.addCluster(clusterAdded))
         } catch (e: unknown) {
             console.log(e)
             message.error(`Add cluster errored: ${e}`)

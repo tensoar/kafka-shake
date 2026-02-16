@@ -19,6 +19,7 @@ export default abstract class BaseService<
     async saveOne(data: TAbstract): Promise<TAbstract> {
         const entity = this.rep.create(data as DeepPartial<TEntity>)
         const saved = await this.rep.save(entity)
+        console.log('saved: ', saved)
         return saved as unknown as TAbstract
     }
 

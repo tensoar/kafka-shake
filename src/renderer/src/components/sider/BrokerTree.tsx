@@ -1,12 +1,19 @@
 import { Tree, TreeDataNode, TreeProps } from 'antd'
-import { useEffect, useState } from 'react';
-import ServiceProxy from '@renderer/util/ServiceProxy';
-import { ServiceName } from '@shared/service/Constants';
-import IKafkaClusterService from '@shared/service/IKafkaClusterService';
+import { useEffect, useState } from 'react'
+import ServiceProxy from '@renderer/util/ServiceProxy'
+import { ServiceName } from '@shared/service/Constants'
+import IKafkaClusterService from '@shared/service/IKafkaClusterService'
+import { useDispatch, useSelector } from 'react-redux'
+import { RootState } from '@renderer/redux/store'
+import { actions } from '@renderer/redux/actions'
 
 export default function BrokerTree(): React.JSX.Element {
-    const [treeData, setTreeData] = useState<TreeDataNode[]>([])
-    const kafkaClusterService = ServiceProxy.get<IKafkaClusterService>(ServiceName.KAFKA_CLUSTER_SERVICE)
+    // const [treeData, setTreeData] = useState<TreeDataNode[]>([])
+    const treeData = useSelector((rootState: RootState) => rootState.kafkaCluster.clustersTree)
+    const dispath = useDispatch()
+    const kafkaClusterService = ServiceProxy.get<IKafkaClusterService>(
+        ServiceName.KAFKA_CLUSTER_SERVICE
+    )
 
     const onSelect: TreeProps['onSelect'] = (selectedKeys, info) => {
         console.log('selected', selectedKeys, info)
@@ -14,33 +21,10 @@ export default function BrokerTree(): React.JSX.Element {
     useEffect(() => {
         const loadTreeData = async () => {
             const clusters = await kafkaClusterService.findAll()
-            console.log(clusters)
-            setTreeData(
-                clusters.map((cluster) => ({
-                    title: cluster.clusterName,
-                    key: cluster.id!,
-                    children: [
-                        {
-                            title: 'Cluster Info',
-                            key: 'cluster_info-' + cluster.id,
-                            checkable: false
-                        },
-                        {
-                            title: 'Topics',
-                            key: 'topics' + cluster.id,
-                            checkable: false
-                        },
-                        {
-                            title: 'Consumers',
-                            key: 'consumers' + cluster.id,
-                            checkable: false
-                        }
-                    ]
-                }))
-            )
+            dispath(actions.kafkaCluster.initClusters(clusters))
         }
-
         loadTreeData()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     return (
