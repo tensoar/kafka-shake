@@ -24,8 +24,10 @@ export default class DataSourceManager {
             await this.ds.query(`
                 CREATE TABLE IF NOT EXISTS kafka_cluster (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    cluster_name TEXT NOT NULL DEFAULT '',
                     brokers TEXT NOT NULL DEFAULT '',
                     client_id TEXT NOT NULL DEFAULT '',
+                    sasl TEXT NOT NULL DEFAULT 'none',
                     use_ssl INTEGER NOT NULL DEFAULT 0
                 );
             `)

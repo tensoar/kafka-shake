@@ -6,6 +6,9 @@ export default class KafkaCluster implements IKafkaCluster {
     @PrimaryGeneratedColumn({ type: 'integer' })
     id?: number
 
+    @Column({ type: 'text', name: 'cluster_name' })
+    clusterName: string = ''
+
     @Column({ type: 'simple-array' })
     brokers: string[] = []
 
@@ -14,4 +17,7 @@ export default class KafkaCluster implements IKafkaCluster {
 
     @Column({ name: 'use_ssl', type: 'integer' })
     useSSL: boolean = false
+
+    @Column({ name: 'sasl', type: 'text' })
+    saslMechanism: 'none' | 'plain' | 'scram-sha-256' | 'scram-sha-512' = 'none'
 }

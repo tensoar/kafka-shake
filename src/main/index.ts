@@ -7,12 +7,13 @@ import DataSourceManager from './db/DataSourceManager'
 import KafkaClusterService from './db/service/KafkaClusterService'
 import AbsKafkaCluster from '@shared/entity/AbsKafkaCluster'
 import ServiceRegistry from './db/ServiceRegistry'
+import { ServiceName } from '@shared/service/Constants'
 
 function createWindow(): void {
     // Create the browser window.
     const mainWindow = new BrowserWindow({
-        width: 900,
-        height: 670,
+        width: 1200,
+        height: 750,
         show: false,
         autoHideMenuBar: true,
         ...(process.platform === 'linux' ? { icon } : {}),
@@ -71,7 +72,7 @@ app.whenReady().then(async () => {
         console.log('DB initlized ...')
     }
 
-    ServiceRegistry.register(KafkaClusterService.name, KafkaClusterService.instance())
+    ServiceRegistry.register(ServiceName.KAFKA_CLUSTER_SERVICE, KafkaClusterService.instance())
 
     createWindow()
 
