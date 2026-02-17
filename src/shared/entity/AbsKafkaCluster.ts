@@ -6,7 +6,7 @@ export default abstract class AbsKafkaCluster implements Identifiable {
     abstract brokers: string[]
     abstract clientId: string
     abstract useSSL: boolean
-    abstract saslMechanism: 'none' | 'plain' | 'scram-sha-256' | 'scram-sha-512'
+    abstract saslMechanism: 'none' | 'plain' | 'scram-sha-256' | 'scram-sha-512' | 'oauthbearer'
 
     static createDefault(): AbsKafkaCluster {
         return {

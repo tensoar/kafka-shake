@@ -3,6 +3,7 @@ import path from 'path'
 import os from 'os'
 import { DataSource, EntityTarget, ObjectLiteral } from 'typeorm'
 import KafkaCluster from '@main/entity/KafkaCluster'
+import SASALConf from '@main/entity/SASALConf'
 
 const cwdDir = path.join(
     process.env.HOME || process.env.USERPROFILE || os.homedir(),
@@ -13,7 +14,7 @@ export default class DataSourceManager {
     private static readonly ds = new DataSource({
         type: 'better-sqlite3',
         database: path.join(cwdDir, 'ks.db'),
-        entities: [KafkaCluster],
+        entities: [KafkaCluster, SASALConf],
         synchronize: false,
         logging: true
     })
@@ -29,6 +30,16 @@ export default class DataSourceManager {
                     client_id TEXT NOT NULL DEFAULT '',
                     sasl TEXT NOT NULL DEFAULT 'none',
                     use_ssl INTEGER NOT NULL DEFAULT 0
+                );
+            `)
+            await this.ds.query(`
+                CREATE TABLE IF NOT EXISTS sasl_conf (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    cluster_id INTEGER NOT NULL DEFAULT 0,
+                    username TEXT NOT NULL DEFAULT '',
+                    password TEXT NOT NULL DEFAULT '',
+                    token TEXT NOT NULL DEFAULT '',
+                    FOREIGN KEY (cluster_id) REFERENCES kafka_cluster(id) ON DELETE CASCADE ON UPDATE CASCADE
                 );
             `)
             return true

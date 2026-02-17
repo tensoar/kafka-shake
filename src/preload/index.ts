@@ -1,10 +1,14 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import { KafkaWorkerPayload } from '@shared/types'
 
 // Custom APIs for renderer
 const api = {
     callService: (serviceName: string, method: string, ...args: unknown[]) => {
         return ipcRenderer.invoke('call-service', { serviceName, method, args })
+    },
+    callKafkaAction: (payload: KafkaWorkerPayload) => {
+        return ipcRenderer.invoke('kafka-action', payload)
     }
 }
 

@@ -1,9 +1,9 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { ClusterTreeNode } from '@renderer/components/sider/types'
 import AbsKafkaCluster from '@shared/entity/AbsKafkaCluster'
-import { TreeDataNode } from 'antd'
 
 export interface ClusterTreeState {
-    clustersTree: TreeDataNode[]
+    clustersTree: ClusterTreeNode[]
     selectedClusterId: number
     selectedTopic: string
 }
@@ -14,25 +14,37 @@ const initialState: ClusterTreeState = {
     selectedTopic: ''
 }
 
-const clusterToTreeNode = (cluster: AbsKafkaCluster): TreeDataNode => {
+const clusterToTreeNode = (cluster: AbsKafkaCluster): ClusterTreeNode => {
     return {
         title: cluster.clusterName,
         key: cluster.id!,
+        type: 'cluster-node',
         children: [
             {
                 title: 'Cluster Info',
                 key: 'cluster_info-' + cluster.id,
-                checkable: false
+                checkable: false,
+                type: 'cluster-info'
             },
             {
                 title: 'Topics',
-                key: 'topics' + cluster.id,
-                checkable: false
+                key: 'topics-' + cluster.id,
+                checkable: false,
+                type: 'cluster-topic',
+                children: [
+                    {
+                        title: 'multi_monitor',
+                        key: cluster.id + ':multi_monitor',
+                        checkable: false,
+                        type: 'topic-item'
+                    }
+                ]
             },
             {
                 title: 'Consumers',
-                key: 'consumers' + cluster.id,
-                checkable: false
+                key: 'consumers-' + cluster.id,
+                checkable: false,
+                type: 'cluster-consumer'
             }
         ]
     }

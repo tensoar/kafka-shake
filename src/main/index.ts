@@ -8,6 +8,9 @@ import KafkaClusterService from './db/service/KafkaClusterService'
 import AbsKafkaCluster from '@shared/entity/AbsKafkaCluster'
 import ServiceRegistry from './db/ServiceRegistry'
 import { ServiceName } from '@shared/service/Constants'
+import SASLConfService from './db/service/SASLService'
+import { KafkaWokerPayloadFetchMessage, KafkaWorkerPayload } from '@shared/types'
+import KafkaManager from './kafka/KafkaManager'
 
 function createWindow(): void {
     // Create the browser window.
@@ -73,6 +76,14 @@ app.whenReady().then(async () => {
     }
 
     ServiceRegistry.register(ServiceName.KAFKA_CLUSTER_SERVICE, KafkaClusterService.instance())
+    ServiceRegistry.register(ServiceName.SASL_CONF_SERVICE, SASLConfService.instance())
+
+    const kafkaManager = new KafkaManager()
+
+    ipcMain.handle('kafka-action', async (__, payload: KafkaWorkerPayload) => {
+        console.log('kafka-action payload: ', payload)
+        return kafkaManager.postWorkPayload(payload)
+    })
 
     createWindow()
 

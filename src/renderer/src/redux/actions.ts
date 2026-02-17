@@ -6,6 +6,7 @@ import {
     setSelectedTopic,
     updateCluster
 } from './slice/KafkaClusterSlice'
+import { addMessage, clearMessage } from './slice/KafkaMessageSlice'
 import { setThemeStyle } from './slice/ThemeSlice'
 
 export const actions = {
@@ -19,5 +20,9 @@ export const actions = {
         removeCluster,
         setSelectedClusterId,
         setSelectedTopic
+    },
+    kafkaMessage: {
+        addMessage,
+        clearMessage
     }
 }

@@ -44,6 +44,11 @@ export default abstract class BaseService<
         return entities as unknown as TAbstract[]
     }
 
+    async findFirstBy(where: FindOptionsWhere<TEntity>): Promise<TAbstract> {
+        const entity = await this.rep.findOneBy(where)
+        return entity as unknown as TAbstract
+    }
+
     async update(id: number, data: Partial<TAbstract>): Promise<TAbstract | null> {
         const existing = await this.rep.findOneBy({ id } as FindOptionsWhere<TEntity>)
         if (!existing) return null

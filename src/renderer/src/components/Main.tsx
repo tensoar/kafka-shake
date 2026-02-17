@@ -2,6 +2,7 @@ import { Layout, theme } from 'antd'
 import { Content } from 'antd/es/layout/layout'
 import SiderMain from './sider/SiderMain'
 import Sider from 'antd/es/layout/Sider'
+import { Outlet } from 'react-router'
 
 export default function Main(): React.JSX.Element {
     const {
@@ -30,7 +31,7 @@ export default function Main(): React.JSX.Element {
             </Sider>
             <Content
                 style={{
-                    marginLeft: '10px',
+                    marginLeft: '6px',
                     height: '100%',
                     background: colorBgContainer,
                     borderRadius: borderRadiusLG,
@@ -38,7 +39,7 @@ export default function Main(): React.JSX.Element {
                     padding: '10px'
                 }}
             >
-                Hello World
+                <Outlet />
             </Content>
         </Layout>
     )

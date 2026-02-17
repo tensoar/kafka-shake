@@ -9,6 +9,17 @@ export default defineConfig({
                 '@shared': resolve('src/shared'),
                 '@main': resolve('src/main')
             }
+        },
+        build: {
+            rollupOptions: {
+                input: {
+                    index: resolve('src/main/index.ts'),
+                    KafkaWorker: resolve('src/main/kafka/worker/KafkaWorker.ts')
+                },
+                output: {
+                    entryFileNames: '[name].js'
+                }
+            }
         }
     },
     preload: {

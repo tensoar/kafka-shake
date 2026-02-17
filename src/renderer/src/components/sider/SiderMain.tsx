@@ -1,11 +1,14 @@
 import SiderHeader from './SiderHeader'
 import { theme } from 'antd'
-import BrokerTree from './BrokerTree'
+import ClusterTree from './ClusterTree'
+import { useState } from 'react'
 
 export default function SiderMain(): React.JSX.Element {
     const {
         token: { colorBgContainer, borderRadiusLG }
     } = theme.useToken()
+
+    const [checkedClusterKeys, setCheckedClusterKeys] = useState<number[]>([])
 
     return (
         <div
@@ -18,7 +21,7 @@ export default function SiderMain(): React.JSX.Element {
             }}
         >
             <div style={{ flexShrink: 0 }}>
-                <SiderHeader />
+                <SiderHeader checkedClusterKeys={checkedClusterKeys} />
             </div>
             <div
                 style={{
@@ -33,7 +36,11 @@ export default function SiderMain(): React.JSX.Element {
                     borderRadius: borderRadiusLG
                 }}
             >
-                <BrokerTree />
+                <ClusterTree
+                    onClusterChecked={(checkedKeys) => {
+                        setCheckedClusterKeys(checkedKeys as number[])
+                    }}
+                />
             </div>
         </div>
     )

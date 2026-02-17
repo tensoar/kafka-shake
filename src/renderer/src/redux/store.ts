@@ -1,11 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit'
 import { themeReducer } from './slice/ThemeSlice'
 import { kafkaClusterReducer } from './slice/KafkaClusterSlice'
+import { kafkaMessageReducer } from './slice/KafkaMessageSlice'
 
 export const store = configureStore({
     reducer: {
         theme: themeReducer,
-        kafkaCluster: kafkaClusterReducer
+        kafkaCluster: kafkaClusterReducer,
+        kafkaMessage: kafkaMessageReducer
     }
 })
 

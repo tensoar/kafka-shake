@@ -1,4 +1,16 @@
-import { Button, Col, Form, message, Modal, Row, Space, theme, Tooltip, Typography } from 'antd'
+import {
+    Button,
+    Col,
+    Form,
+    message,
+    Modal,
+    Popconfirm,
+    Row,
+    Space,
+    theme,
+    Tooltip,
+    Typography
+} from 'antd'
 import {
     DeleteOutlined,
     GithubOutlined,
@@ -11,15 +23,21 @@ import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '../../redux/store'
 import { actions } from '@renderer/redux/actions'
 import _ from 'lodash'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import AddClusterForm from '../forms/AddClusterForm'
 import { AddClusterFormValues } from '../forms/types'
 import AbsKafkaCluster from '@shared/entity/AbsKafkaCluster'
 import ServiceProxy from '@renderer/util/ServiceProxy'
 import IKafkaClusterService from '@shared/service/IKafkaClusterService'
 import { ServiceName } from '@shared/service/Constants'
+import AbsSASALConf from '@shared/entity/AbsSASALConf'
+import ISASLConfService from '@shared/service/ISASLConfService'
 
-export default function SiderHeader(): React.JSX.Element {
+export type SiderHeaderProps = {
+    checkedClusterKeys: number[]
+}
+
+export default function SiderHeader({ checkedClusterKeys }: SiderHeaderProps): React.JSX.Element {
     const {
         token: { colorBgContainer, borderRadiusLG }
     } = theme.useToken()
@@ -28,6 +46,9 @@ export default function SiderHeader(): React.JSX.Element {
     const reversedThemeStyle = themeStyle === 'light' ? 'dark' : 'light'
     const kafkaClusterService = ServiceProxy.get<IKafkaClusterService>(
         ServiceName.KAFKA_CLUSTER_SERVICE
+    )
+    const saslConfService = ServiceProxy.get<ISASLConfService>(
+        ServiceName.SASL_CONF_SERVICE
     )
 
     const [addClusterForm] = Form.useForm<AddClusterFormValues>()
@@ -47,6 +68,13 @@ export default function SiderHeader(): React.JSX.Element {
 
         try {
             const clusterAdded = await kafkaClusterService.saveOne(cluster)
+            if (cluster.saslMechanism !== 'none') {
+                const saslConf = AbsSASALConf.createDefault()
+                saslConf.clusterId = clusterAdded.id!
+                saslConf.username = formValue.saslUsername!
+                saslConf.password = formValue.saslPassword!
+                await saslConfService.saveOne(saslConf)
+            }
             message.success('Add kafka cluster success')
             console.log('cluster: ', clusterAdded)
             dispatch(actions.kafkaCluster.addCluster(clusterAdded))
@@ -57,6 +85,16 @@ export default function SiderHeader(): React.JSX.Element {
             setAddClusterFormLoading(false)
             setAddClusterModeOpen(false)
         }
+    }
+
+    const deleteClusters = async () => {
+        if (checkedClusterKeys.length < 1) {
+            message.info('No cluster select')
+            return
+        }
+        await kafkaClusterService.deleteById(checkedClusterKeys)
+        dispatch(actions.kafkaCluster.removeCluster(checkedClusterKeys))
+        message.info('Cluster was deleted')
     }
 
     return (
@@ -101,12 +139,21 @@ export default function SiderHeader(): React.JSX.Element {
                     />
                 </Tooltip>
                 <Tooltip title="Delete Selected Brokers">
-                    <Button
-                        icon={<DeleteOutlined />}
-                        shape="square"
-                        size="small"
-                        style={{ borderRadius: '20%' }}
-                    />
+                    <Popconfirm
+                        title="Delete cluster"
+                        description={`Confirm to delete ${checkedClusterKeys.length} selected clusters?`}
+                        onConfirm={deleteClusters}
+                        okText="Yes"
+                        cancelText="No"
+                    >
+                        <Button
+                            icon={<DeleteOutlined />}
+                            shape="square"
+                            size="small"
+                            danger
+                            style={{ borderRadius: '20%' }}
+                        />
+                    </Popconfirm>
                 </Tooltip>
                 <Tooltip title={`Change To ${_.upperFirst(reversedThemeStyle)} Mode`}>
                     <Button

@@ -6,18 +6,32 @@ import IKafkaClusterService from '@shared/service/IKafkaClusterService'
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '@renderer/redux/store'
 import { actions } from '@renderer/redux/actions'
+import { ClusterTreeNode } from './types'
+import { useNavigate } from 'react-router'
 
-export default function BrokerTree(): React.JSX.Element {
-    // const [treeData, setTreeData] = useState<TreeDataNode[]>([])
+export type ClusterTreeProps = {
+    onClusterChecked: TreeProps['onCheck']
+}
+
+export default function ClusterTree({ onClusterChecked }: ClusterTreeProps): React.JSX.Element {
     const treeData = useSelector((rootState: RootState) => rootState.kafkaCluster.clustersTree)
+    const navigate = useNavigate()
     const dispath = useDispatch()
     const kafkaClusterService = ServiceProxy.get<IKafkaClusterService>(
         ServiceName.KAFKA_CLUSTER_SERVICE
     )
 
-    const onSelect: TreeProps['onSelect'] = (selectedKeys, info) => {
-        console.log('selected', selectedKeys, info)
+    const onClusterClick = (event, node: ClusterTreeNode) => {
+        console.log(node)
+        if (node.type === 'topic-item') {
+            const key = node.key.toString()
+            const spliteIndex = key.indexOf(':')
+            const topic = key.substring(spliteIndex + 1)
+            const clusterId = key.substring(0, spliteIndex)
+            navigate(`cluster/topic/${clusterId}/${topic}`)
+        }
     }
+
     useEffect(() => {
         const loadTreeData = async () => {
             const clusters = await kafkaClusterService.findAll()
@@ -32,8 +46,8 @@ export default function BrokerTree(): React.JSX.Element {
             checkable
             showLine={true}
             showIcon={true}
-            defaultExpandedKeys={['0-0-0']}
-            onSelect={onSelect}
+            onCheck={onClusterChecked}
+            onClick={onClusterClick}
             treeData={treeData}
         />
     )
