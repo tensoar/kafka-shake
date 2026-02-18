@@ -86,11 +86,10 @@ async function fetchMessage({
             }
 
             const groupId = `kafka-shake-fetch-${topic}-${partition}-${Date.now()}-${Math.random()}`
-            const consumer = kafka!.consumer({ groupId, sessionTimeout: 30000 })
+            const consumer = kafka!.consumer({ groupId, sessionTimeout: 30 * 1000 })
             await consumer.connect()
             await consumer.subscribe({ topic, fromBeginning: false })
 
-            consumer.seek({ topic, partition, offset: startOffset.toString() })
 
             const messages: IKafkaMessage[] = []
             let receivedCount = 0
@@ -108,6 +107,7 @@ async function fetchMessage({
 
             await consumer.run({
                 eachMessage: async ({ message }) => {
+                    console.log('message: ', message)
                     messages.push({
                         partition,
                         offset: message.offset,
@@ -126,6 +126,7 @@ async function fetchMessage({
                 }
             })
 
+            consumer.seek({ topic, partition, offset: startOffset.toString() })
             return promise
         })
 

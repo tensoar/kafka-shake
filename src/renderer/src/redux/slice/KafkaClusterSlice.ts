@@ -33,8 +33,8 @@ const clusterToTreeNode = (cluster: AbsKafkaCluster): ClusterTreeNode => {
                 type: 'cluster-topic',
                 children: [
                     {
-                        title: 'multi_monitor',
-                        key: cluster.id + ':multi_monitor',
+                        title: 'test123',
+                        key: cluster.id + ':test123',
                         checkable: false,
                         type: 'topic-item'
                     }
