@@ -29,11 +29,20 @@ const kafkaMessageSlice = createSlice({
             state[topicId] = newMessages
         },
 
+        initMessage: (state, action: PayloadAction<IKafkaMessageDiaptchType>) => {
+            const { topicId, message } = action.payload
+            if (_.isArray(message)) {
+                state[topicId] = action.payload.message as IKafkaMessage[]
+            } else {
+                state[topicId] = [action.payload.message as IKafkaMessage]
+            }
+        },
+
         clearMessage: (state, action: PayloadAction<string>) => {
             state[action.payload] = []
         }
     }
 })
 
-export const { addMessage, clearMessage } = kafkaMessageSlice.actions
+export const { initMessage, addMessage, clearMessage } = kafkaMessageSlice.actions
 export const kafkaMessageReducer = kafkaMessageSlice.reducer

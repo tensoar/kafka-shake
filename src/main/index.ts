@@ -82,7 +82,10 @@ app.whenReady().then(async () => {
 
     ipcMain.handle('kafka-action', async (__, payload: KafkaWorkerPayload) => {
         console.log('kafka-action payload: ', payload)
-        return kafkaManager.postWorkPayload(payload)
+        if (payload.action == 'fetch-message') {
+            return kafkaManager.fetchMessage(payload)
+        }
+        return
     })
 
     createWindow()

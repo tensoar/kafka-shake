@@ -25,7 +25,7 @@ export default function TopicMain() {
                     const data = await window.api.callKafkaAction(payload)
                     console.log('fetch data: ', data)
                     dispath(
-                        actions.kafkaMessage.addMessage({
+                        actions.kafkaMessage.initMessage({
                             topicId: kafkaUtil.buildTopicId(clusterId as string, topicName as string),
                             message: (data as KafkaWokerMessageFetchMessage).messages
                         })
