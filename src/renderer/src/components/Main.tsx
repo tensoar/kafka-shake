@@ -33,10 +33,11 @@ export default function Main(): React.JSX.Element {
                 style={{
                     marginLeft: '6px',
                     height: '100%',
+                    width: '100%',
                     background: colorBgContainer,
                     borderRadius: borderRadiusLG,
-                    overflow: 'auto',
-                    padding: '10px'
+                    padding: '10px',
+                    overflow: 'auto'
                 }}
             >
                 <Outlet />
