@@ -7,6 +7,10 @@ export interface ClusterTreeState {
     selectedClusterId: number
     selectedTopic: string
 }
+export interface SetClusterTopics {
+    clusterId: number
+    topics: string[]
+}
 
 const initialState: ClusterTreeState = {
     clustersTree: [],
@@ -31,14 +35,8 @@ const clusterToTreeNode = (cluster: AbsKafkaCluster): ClusterTreeNode => {
                 key: 'topics-' + cluster.id,
                 checkable: false,
                 type: 'cluster-topic',
-                children: [
-                    {
-                        title: 'test123',
-                        key: cluster.id + ':test123',
-                        checkable: false,
-                        type: 'topic-item'
-                    }
-                ]
+                isLeaf: false,
+                children: []
             },
             {
                 title: 'Consumers',
@@ -81,8 +79,31 @@ const kafkaClusterSlice = createSlice({
         setSelectedClusterId: (state, action: PayloadAction<number>) => {
             state.selectedClusterId = action.payload
         },
-        setSelectedTopic: (state, action: PayloadAction<string>) =>  {
+        setSelectedTopic: (state, action: PayloadAction<string>) => {
             state.selectedTopic = action.payload
+        },
+        setClusterTopics: (state, action: PayloadAction<SetClusterTopics>) => {
+            const { clusterId, topics } = action.payload
+            const clusterNode = state.clustersTree.find((it) => it.key === clusterId)
+            if (!clusterNode) {
+                console.log(`No cluster node was found with id: `, clusterId)
+                return
+            }
+            const topicsNode = clusterNode?.children.find(
+                (it) => it.key == `topics-` + clusterId
+            ) as ClusterTreeNode
+            if (!topicsNode) {
+                console.log(`No topics node was found with key: `, `topics-` + clusterId)
+                return
+            }
+            topicsNode.children = topics.map(t => ({
+                title: t,
+                isLeaf: true,
+                key: clusterId + ':' + t,
+                checkable: false,
+                type: 'topic-item'
+            }))
+            state.clustersTree = [...state.clustersTree]
         }
     }
 })
@@ -93,7 +114,8 @@ export const {
     updateCluster,
     removeCluster,
     setSelectedClusterId,
-    setSelectedTopic
+    setSelectedTopic,
+    setClusterTopics
 } = kafkaClusterSlice.actions
 
 export const kafkaClusterReducer = kafkaClusterSlice.reducer

@@ -2,6 +2,7 @@ import {
     addCluster,
     initClusters,
     removeCluster,
+    setClusterTopics,
     setSelectedClusterId,
     setSelectedTopic,
     updateCluster
@@ -19,7 +20,8 @@ export const actions = {
         updateCluster,
         removeCluster,
         setSelectedClusterId,
-        setSelectedTopic
+        setSelectedTopic,
+        setClusterTopics
     },
     kafkaMessage: {
         initMessage,

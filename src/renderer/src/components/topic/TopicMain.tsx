@@ -17,13 +17,14 @@ import {
     Table,
     TableProps,
     DatePicker,
-    theme
+    Card
 } from 'antd'
 import { SearchOutlined, SendOutlined } from '@ant-design/icons'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { useParams } from 'react-router'
 import _ from 'lodash'
+import { DateTime } from 'luxon'
 import { ResizeCallbackData } from 'react-resizable'
 import ResizableTitle from './ResizableTitle'
 import { ColumnsType } from 'antd/es/table'
@@ -31,6 +32,7 @@ import { ColumnsType } from 'antd/es/table'
 export default function TopicMain() {
     const { clusterId, topicName } = useParams<{ clusterId: string; topicName: string }>()
     const messages = useTopicMessages(parseInt(clusterId as string), topicName as string)
+    const [filteredMessages, setFilteredMessages] = useState<IKafkaMessage[]>([])
     const [payload, setPayload] = useState<KafkaWokerPayloadFetchMessage>({
         action: 'fetch-message',
         direction: 'latest',
@@ -39,10 +41,11 @@ export default function TopicMain() {
         clusterId: parseInt(clusterId as string, 10)
     })
     const [searchOptions, setSearchOptions] = useState<{
+        key: string
         value: string
         startTime: number
         endTime: number
-    }>({ value: '', startTime: 0, endTime: 0 })
+    }>({ key: '', value: '', startTime: 0, endTime: 0 })
 
     const dispath = useDispatch()
 
@@ -54,16 +57,16 @@ export default function TopicMain() {
             width: 80
         },
         {
-            title: 'Key',
-            dataIndex: 'key',
-            key: 'key',
+            title: 'Offset',
+            dataIndex: 'offset',
+            key: 'offset',
             sortDirections: ['ascend', 'descend'],
             width: 60
         },
         {
-            title: 'Offset',
-            dataIndex: 'offset',
-            key: 'offset',
+            title: 'Key',
+            dataIndex: 'key',
+            key: 'key',
             sortDirections: ['ascend', 'descend'],
             width: 60
         },
@@ -80,7 +83,7 @@ export default function TopicMain() {
                         scrollbarWidth: 'thin'
                     }}
                 >
-                    {_.fill(Array(500), value).join(",")}
+                    {value}
                 </div>
             )
         },
@@ -89,7 +92,10 @@ export default function TopicMain() {
             dataIndex: 'timestamp',
             key: 'timestamp',
             sortDirections: ['ascend', 'descend'],
-            width: 120
+            width: 160,
+            render: (value: string) => (
+                <span>{DateTime.fromMillis(parseInt(value)).toFormat('yyyy-LL-dd mm:hh:ss')}</span>
+            )
         }
     ])
 
@@ -100,21 +106,28 @@ export default function TopicMain() {
         }))
     }
 
-    const setSearchOptionsValue = (v: number[] | string, key: 'value' | 'timeRange') => {
+    const setSearchOptionsValue = (v: number[] | string, key: 'key' | 'value' | 'timeRange') => {
         if (key == 'value') {
             setSearchOptions((pre) => ({
                 ...pre,
                 value: (v as string) || ''
             }))
+        } else if (key == 'key') {
+            setSearchOptions((pre) => ({
+                ...pre,
+                key: (v as string) || ''
+            }))
         } else {
             if (v && v.length > 1 && _.isNumber(v[0]) && _.isNumber(v[1])) {
                 setSearchOptions((pre) => ({
+                    key: pre.key,
                     value: pre.value,
                     startTime: v[0] as number,
                     endTime: v[1] as number
                 }))
             } else {
                 setSearchOptions((pre) => ({
+                    key: pre.key,
                     value: pre.value,
                     startTime: 0,
                     endTime: 0
@@ -149,6 +162,40 @@ export default function TopicMain() {
         }
     }
 
+    const filterMessages = useCallback(() => {
+        console.log('filterMessages ...')
+        let result = [...messages]
+        console.log('result: ', result)
+        console.log('searchOptions: ', searchOptions)
+        // 按 Key 过滤
+        if (searchOptions.key) {
+            result = result.filter((msg) =>
+                msg.key?.toLowerCase().includes(searchOptions.key.toLowerCase())
+            )
+        }
+
+        // 按 Value 过滤
+        if (searchOptions.value) {
+            result = result.filter((msg) =>
+                msg.value?.toLowerCase().includes(searchOptions.value.toLowerCase())
+            )
+        }
+
+        // 按时间范围过滤
+        if (searchOptions.startTime && searchOptions.endTime) {
+            result = result.filter((msg) => {
+                const msgTime = parseInt(msg.timestamp); // 假设 timestamp 是毫秒时间戳
+                return msgTime >= searchOptions.startTime && msgTime <= searchOptions.endTime;
+            })
+        }
+        setFilteredMessages(result)
+    }, [messages, searchOptions])
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        filterMessages()
+    }, [messages, filterMessages])
+
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setPayload((pre) => ({
@@ -173,6 +220,7 @@ export default function TopicMain() {
                     <Space size="small" align="center">
                         <Typography.Text strong>Fetch Count Per Paritition:</Typography.Text>
                         <InputNumber
+                            size="small"
                             value={payload.count}
                             min={1}
                             max={10000}
@@ -183,6 +231,7 @@ export default function TopicMain() {
                     <Space size="small" align="center">
                         <Typography.Text strong>Direction:</Typography.Text>
                         <Select
+                            size="small"
                             value={payload.direction}
                             onChange={(v) => setPayloadValue(v as string, 'direction')}
                             style={{ width: 80 }}
@@ -195,6 +244,7 @@ export default function TopicMain() {
                     <Space>
                         <Button
                             type="primary"
+                            size="small"
                             icon={<SendOutlined />}
                             onClick={async () => {
                                 const payload: KafkaWokerPayloadFetchMessage = {
@@ -212,7 +262,8 @@ export default function TopicMain() {
                                             clusterId as string,
                                             topicName as string
                                         ),
-                                        message: _.fill(Array(10000), (data as KafkaWokerMessageFetchMessage).messages[0]) as IKafkaMessage[]
+                                        message: (data as KafkaWokerMessageFetchMessage)
+                                            .messages as IKafkaMessage[]
                                     })
                                 )
                             }}
@@ -221,37 +272,49 @@ export default function TopicMain() {
                         </Button>
                     </Space>
                 </Space>
-                <Space>
+                <Card title="Filter Messages" size="small">
                     <Space>
-                        <Typography.Text strong>Value:</Typography.Text>
-                        <Input
-                            placeholder="Input To Search By Value"
-                            width={160}
-                            onChange={(v) => setSearchOptionsValue(v.target.value, 'value')}
-                        />
+                        <Space>
+                            <Typography.Text strong>Key:</Typography.Text>
+                            <Input
+                                placeholder="Search Key"
+                                size="small"
+                                style={{ width: 90 }}
+                                onChange={(v) => setSearchOptionsValue(v.target.value, 'key')}
+                            />
+                        </Space>
+                        <Space>
+                            <Typography.Text strong>Value:</Typography.Text>
+                            <Input
+                                placeholder="Search Value"
+                                size="small"
+                                style={{ width: 180 }}
+                                onChange={(v) => setSearchOptionsValue(v.target.value, 'value')}
+                            />
+                        </Space>
+                        <Space>
+                            <Typography.Text strong>Date:</Typography.Text>
+                            <DatePicker.RangePicker
+                                style={{ width: 320 }}
+                                showTime
+                                size="small"
+                                onChange={(dates) => {
+                                    if (dates) {
+                                        setSearchOptionsValue(
+                                            [
+                                                (dates[0]?.unix() || 0) * 1000,
+                                                (dates[1]?.unix() || 0) * 1000
+                                            ],
+                                            'timeRange'
+                                        )
+                                    } else {
+                                        setSearchOptionsValue([0, 0], 'timeRange')
+                                    }
+                                }}
+                            />
+                        </Space>
                     </Space>
-                    <Space>
-                        <Typography.Text strong>Date:</Typography.Text>
-                        <DatePicker.RangePicker
-                            showTime
-                            onChange={(dates) => {
-                                console.log(dates![0]?.unix())
-                                if (dates) {
-                                    setSearchOptionsValue(
-                                        [
-                                            (dates[0]?.unix() || 0) * 1000,
-                                            (dates[1]?.unix() || 0) * 1000
-                                        ],
-                                        'timeRange'
-                                    )
-                                } else {
-                                    setSearchOptionsValue([0, 0], 'timeRange')
-                                }
-                            }}
-                        />
-                    </Space>
-                    <Button icon={<SearchOutlined />} type="primary">Search</Button>
-                </Space>
+                </Card>
             </Space>
             <div
                 style={{
@@ -266,10 +329,11 @@ export default function TopicMain() {
             >
                 <Table
                     bordered
+                    rowKey={(record) => `${record.partition}-${record.offset}`}
                     size="small"
                     components={components}
                     columns={mergedColumns}
-                    dataSource={messages}
+                    dataSource={filteredMessages}
                     tableLayout="fixed"
                     // scroll={{ y: '100%' }}
                     pagination={{

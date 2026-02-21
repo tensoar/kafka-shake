@@ -1,5 +1,6 @@
-import { Tree, TreeDataNode, TreeProps } from 'antd'
-import { useEffect, useState } from 'react'
+import { Button, Space, Tooltip, Tree, TreeProps } from 'antd'
+import { useCallback, useEffect, useState } from 'react'
+import { SyncOutlined } from '@ant-design/icons'
 import ServiceProxy from '@renderer/util/ServiceProxy'
 import { ServiceName } from '@shared/service/Constants'
 import IKafkaClusterService from '@shared/service/IKafkaClusterService'
@@ -8,6 +9,7 @@ import { RootState } from '@renderer/redux/store'
 import { actions } from '@renderer/redux/actions'
 import { ClusterTreeNode } from './types'
 import { useNavigate } from 'react-router'
+import { KafkaWokerMessageFetchTopics } from '@shared/types'
 
 export type ClusterTreeProps = {
     onClusterChecked: TreeProps['onCheck']
@@ -15,13 +17,15 @@ export type ClusterTreeProps = {
 
 export default function ClusterTree({ onClusterChecked }: ClusterTreeProps): React.JSX.Element {
     const treeData = useSelector((rootState: RootState) => rootState.kafkaCluster.clustersTree)
+    const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([])
+    const [loadingKeys, setLoadingKeys] = useState<Set<React.Key>>(new Set())
     const navigate = useNavigate()
     const dispath = useDispatch()
     const kafkaClusterService = ServiceProxy.get<IKafkaClusterService>(
         ServiceName.KAFKA_CLUSTER_SERVICE
     )
 
-    const onClusterClick = (event, node: ClusterTreeNode) => {
+    const onClusterClick = (__, node: ClusterTreeNode) => {
         console.log(node)
         if (node.type === 'topic-item') {
             const key = node.key.toString()
@@ -31,6 +35,97 @@ export default function ClusterTree({ onClusterChecked }: ClusterTreeProps): Rea
             navigate(`cluster/topic/${clusterId}/${topic}`)
         }
     }
+
+    const titleRender = (node: ClusterTreeNode): React.ReactNode => {
+        if (node.type === 'cluster-topic') {
+            return (
+                <div>
+                    <Space size="small">
+                        <span>{node.title as string}</span>
+                        <Tooltip title="Refresh Topics">
+                            <Button
+                                icon={<SyncOutlined />}
+                                type="text"
+                                size="small"
+                                onClick={async (e) => {
+                                    e.stopPropagation()
+                                    e.preventDefault()
+                                    await refreshTopics(node)
+                                }}
+                                onMouseDown={(e) => e.stopPropagation()}
+                                onMouseUp={(e) => e.stopPropagation()}
+                            />
+                        </Tooltip>
+                    </Space>
+                </div>
+            )
+        } else {
+            return <span>{node.title as string}</span>
+        }
+    }
+
+    const refreshTopics = useCallback(
+        async (node: ClusterTreeNode) => {
+            const key = node.key
+            try {
+                if (node.type !== 'cluster-topic') {
+                    return
+                }
+                const clusterId = parseInt((key as string).split('-')[1])
+                setLoadingKeys((prev) => new Set(prev).add(key))
+                const result = (await window.api.callKafkaAction({
+                    clusterId: clusterId,
+                    action: 'fetch-topics'
+                })) as KafkaWokerMessageFetchTopics
+                console.log('fetch topics result: ', result)
+                dispath(
+                    actions.kafkaCluster.setClusterTopics({
+                        clusterId: clusterId,
+                        topics: result.topics
+                    })
+                )
+            } catch (e) {
+                console.log(e)
+            } finally {
+                setLoadingKeys((prev) => {
+                    const newSet = new Set(prev)
+                    newSet.delete(key)
+                    return newSet
+                })
+                setExpandedKeys((prev) => [...prev, node.key])
+            }
+        },
+        [dispath]
+    )
+
+    const onLoadData = useCallback(
+        async (node: ClusterTreeNode) => {
+            const key = node.key
+            try {
+                if (node.type === 'cluster-topic') {
+                    if (!node.children || node.children.length < 1) {
+                        await refreshTopics(node)
+                    }
+                } else {
+                    // TODO
+                }
+            } catch (e) {
+                console.log(e)
+            }
+        },
+        [refreshTopics]
+    )
+
+    const onExpand = useCallback(
+        async (keys: React.Key[], info) => {
+            if (info.expanded) {
+                const node = info.node as ClusterTreeNode
+                await onLoadData(node)
+            }
+            setExpandedKeys(keys)
+        },
+        [onLoadData]
+    )
 
     useEffect(() => {
         const loadTreeData = async () => {
@@ -44,11 +139,16 @@ export default function ClusterTree({ onClusterChecked }: ClusterTreeProps): Rea
     return (
         <Tree
             checkable
+            expandedKeys={expandedKeys}
+            onExpand={onExpand}
             showLine={true}
             showIcon={true}
             onCheck={onClusterChecked}
             onClick={onClusterClick}
+            // loadData={onLoadData}
             treeData={treeData}
+            loadedKeys={Array.from(loadingKeys)}
+            titleRender={titleRender}
         />
     )
 }

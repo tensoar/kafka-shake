@@ -4,8 +4,9 @@ import {
     IKafkaMessage,
     KafkaWokerMessage,
     KafkaWokerMessageFetchMessage,
-    KafkaWokerPayloadFetchMessage,
-    KafkaWorkerPayload
+    KafkaWokerMessageFetchTopics,
+    KafkaWokerPayloadBase,
+    KafkaWokerPayloadFetchMessage
 } from '@shared/types'
 import { BrowserWindow } from 'electron'
 import { Kafka, KafkaConfig, SASLOptions } from 'kafkajs'
@@ -55,23 +56,43 @@ export default class KafkaManager {
         return kafka
     }
 
+    async fetchTopics({ clusterId }: KafkaWokerPayloadBase): Promise<KafkaWokerMessageFetchTopics> {
+        console.log('fetch topics ...')
+        const kafka = await this.getKafkaClient(clusterId)
+        const result: KafkaWokerMessageFetchTopics = {
+            action: 'fetch-topics',
+            clusterId,
+            topics: []
+        }
+        if (!kafka) {
+            console.error(`No kafka cluster with id ${clusterId}`)
+            return result
+        }
+        const admin = kafka!.admin()
+        await admin.connect()
+        const topics = await admin.listTopics()
+        result.topics = topics.filter((t) => !t.startsWith('__consumer_offsets'))
+        console.log('topic list: ', topics)
+        await admin.disconnect()
+        return result
+    }
+
     async fetchMessage({
-        action,
-        offset,
         direction,
         count,
         topic,
         clusterId
     }: KafkaWokerPayloadFetchMessage): Promise<KafkaWokerMessageFetchMessage> {
         const kafka = await this.getKafkaClient(clusterId)
-        if (!kafka) {
-            console.error(`No kafka cluster with id ${clusterId}`)
-        }
         const result: KafkaWokerMessageFetchMessage = {
             action: 'fetch-message',
             clusterId,
             topic,
             messages: []
+        }
+        if (!kafka) {
+            console.error(`No kafka cluster with id ${clusterId}`)
+            return result
         }
         const admin = kafka!.admin()
         await admin.connect()
@@ -158,7 +179,7 @@ export default class KafkaManager {
         })
 
         const results = await Promise.allSettled(fetchPromises)
-        console.log('results: ', results)
+        console.log('results: ', JSON.stringify(results))
         const allMessages: IKafkaMessage[] = []
         results.forEach((result, index) => {
             if (result.status === 'fulfilled') {

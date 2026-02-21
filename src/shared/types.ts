@@ -15,7 +15,12 @@ export interface IKafkaMessageDiaptchType {
     message: IKafkaMessage | IKafkaMessage[]
 }
 
-export type KafkaWorkerAction = 'fetch-message' | 'disconnect' | 'start-consumer' | 'stop-consumer'
+export type KafkaWorkerAction =
+    | 'fetch-message'
+    | 'disconnect'
+    | 'start-consumer'
+    | 'stop-consumer'
+    | 'fetch-topics'
 
 export interface KafkaWokerPayloadBase {
     clusterId: number
@@ -34,7 +39,14 @@ export interface KafkaWokerPayloadFetchMessage extends KafkaWokerPayloadBase {
     topic: string
 }
 
-export type KafkaWorkerPayload = KafkaWokerPayloadStartConsumer | KafkaWokerPayloadFetchMessage
+export interface KafkaWokerPayloadFectchTopics extends KafkaWokerPayloadBase {
+    action: 'fetch-topics'
+}
+
+export type KafkaWorkerPayload =
+    | KafkaWokerPayloadStartConsumer
+    | KafkaWokerPayloadFetchMessage
+    | KafkaWokerPayloadFectchTopics
 
 export interface KafkaWokerMessageBase {
     clusterId: number
@@ -52,4 +64,9 @@ export interface KafkaWokerMessageFetchMessage extends KafkaWokerMessageBase {
     messages: IKafkaMessage[]
 }
 
-export type KafkaWokerMessage = KafkaWokerMessageStartConsumer | KafkaWokerMessageFetchMessage
+export interface KafkaWokerMessageFetchTopics extends KafkaWokerMessageBase {
+    action: 'fetch-topics'
+    topics: string[]
+}
+
+export type KafkaWokerMessage = KafkaWokerMessageStartConsumer | KafkaWokerMessageFetchMessage | KafkaWokerMessageFetchTopics

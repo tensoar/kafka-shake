@@ -82,8 +82,10 @@ app.whenReady().then(async () => {
 
     ipcMain.handle('kafka-action', async (__, payload: KafkaWorkerPayload) => {
         console.log('kafka-action payload: ', payload)
-        if (payload.action == 'fetch-message') {
+        if (payload.action === 'fetch-message') {
             return kafkaManager.fetchMessage(payload)
+        } else if (payload.action === 'fetch-topics') {
+            return kafkaManager.fetchTopics(payload)
         }
         return
     })
