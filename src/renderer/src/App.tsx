@@ -1,4 +1,4 @@
-import { ConfigProvider, theme } from 'antd'
+import { ConfigProvider, theme, App as AntApp } from 'antd'
 import { RootState } from './redux/store'
 import { useSelector } from 'react-redux'
 import { RouterProvider } from 'react-router'
@@ -28,7 +28,9 @@ export default function App(): React.JSX.Element {
                 algorithm: themeStyle === 'light' ? theme.defaultAlgorithm : theme.darkAlgorithm
             }}
         >
-            <RouterProvider router={router} />
+            <AntApp>
+                <RouterProvider router={router} />
+            </AntApp>
         </ConfigProvider>
     )
 }

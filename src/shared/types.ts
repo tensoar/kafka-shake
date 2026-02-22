@@ -15,23 +15,23 @@ export interface IKafkaMessageDiaptchType {
     message: IKafkaMessage | IKafkaMessage[]
 }
 
-export type KafkaWorkerAction =
+export type KafkaAction =
     | 'fetch-message'
     | 'disconnect'
     | 'start-consumer'
     | 'stop-consumer'
     | 'fetch-topics'
 
-export interface KafkaWokerPayloadBase {
+export interface KafkaActionPayloadBase {
     clusterId: number
 }
 
-export interface KafkaWokerPayloadStartConsumer extends KafkaWokerPayloadBase {
+export interface KafkaActionPayloadStartConsumer extends KafkaActionPayloadBase {
     action: 'start-consumer'
     topic: string
 }
 
-export interface KafkaWokerPayloadFetchMessage extends KafkaWokerPayloadBase {
+export interface KafkaActionPayloadFetchMessage extends KafkaActionPayloadBase {
     action: 'fetch-message'
     offset?: number
     direction: 'latest' | 'oldest'
@@ -39,34 +39,39 @@ export interface KafkaWokerPayloadFetchMessage extends KafkaWokerPayloadBase {
     topic: string
 }
 
-export interface KafkaWokerPayloadFectchTopics extends KafkaWokerPayloadBase {
+export interface KafkaActionPayloadFectchTopics extends KafkaActionPayloadBase {
     action: 'fetch-topics'
 }
 
-export type KafkaWorkerPayload =
-    | KafkaWokerPayloadStartConsumer
-    | KafkaWokerPayloadFetchMessage
-    | KafkaWokerPayloadFectchTopics
+export type KafkaActionPayload =
+    | KafkaActionPayloadStartConsumer
+    | KafkaActionPayloadFetchMessage
+    | KafkaActionPayloadFectchTopics
 
-export interface KafkaWokerMessageBase {
+export interface KafkaActionResultBase {
     clusterId: number
+    sucess: boolean
+    errMsg?: string
 }
 
-export interface KafkaWokerMessageStartConsumer extends KafkaWokerMessageBase {
+export interface KafkaActionResultStartConsumer extends KafkaActionResultBase {
     action: 'start-consumer'
     topic: string
     success: boolean
 }
 
-export interface KafkaWokerMessageFetchMessage extends KafkaWokerMessageBase {
+export interface KafkaActionResultFetchMessage extends KafkaActionResultBase {
     action: 'fetch-message'
     topic: string
     messages: IKafkaMessage[]
 }
 
-export interface KafkaWokerMessageFetchTopics extends KafkaWokerMessageBase {
+export interface KafkaActionResultFetchTopics extends KafkaActionResultBase {
     action: 'fetch-topics'
     topics: string[]
 }
 
-export type KafkaWokerMessage = KafkaWokerMessageStartConsumer | KafkaWokerMessageFetchMessage | KafkaWokerMessageFetchTopics
+export type KafkaActionResult =
+    | KafkaActionResultStartConsumer
+    | KafkaActionResultFetchMessage
+    | KafkaActionResultFetchTopics

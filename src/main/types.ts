@@ -1,6 +1,6 @@
 import AbsKafkaCluster from '@shared/entity/AbsKafkaCluster'
 import AbsSASALConf from '@shared/entity/AbsSASALConf'
-import { KafkaWorkerAction } from '@shared/types'
+import { KafkaAction } from '@shared/types'
 
 export interface KafkaWokerData {
     cluster: AbsKafkaCluster
@@ -8,6 +8,6 @@ export interface KafkaWokerData {
 }
 
 export interface KafkaWokerMessage {
-    action: KafkaWorkerAction
+    action: KafkaAction
     data: unknown
 }

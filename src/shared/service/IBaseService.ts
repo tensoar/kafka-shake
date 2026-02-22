@@ -11,6 +11,8 @@ export default interface IBaseService<
 
     findOneById(id: number): Promise<TAbstract | null>
 
+    findFirstBy(where: FindOptionsWhere<TEntity>): Promise<TAbstract>
+
     findAll(): Promise<TAbstract[]>
 
     findManyBy(where: FindOptionsWhere<TEntity>): Promise<TAbstract[]>

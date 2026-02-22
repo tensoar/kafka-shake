@@ -28,6 +28,7 @@ const clusterToTreeNode = (cluster: AbsKafkaCluster): ClusterTreeNode => {
                 title: 'Cluster Info',
                 key: 'cluster_info-' + cluster.id,
                 checkable: false,
+                isLeaf: true,
                 type: 'cluster-info'
             },
             {
@@ -37,13 +38,13 @@ const clusterToTreeNode = (cluster: AbsKafkaCluster): ClusterTreeNode => {
                 type: 'cluster-topic',
                 isLeaf: false,
                 children: []
-            },
-            {
-                title: 'Consumers',
-                key: 'consumers-' + cluster.id,
-                checkable: false,
-                type: 'cluster-consumer'
             }
+            // {
+            //     title: 'Consumers',
+            //     key: 'consumers-' + cluster.id,
+            //     checkable: false,
+            //     type: 'cluster-consumer'
+            // }
         ]
     }
 }

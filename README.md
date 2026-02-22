@@ -1,10 +1,6 @@
 # kafka-shake
 
-An Electron application with React and TypeScript
-
-## Recommended IDE Setup
-
-- [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+A simple Kafka message viewing client, download the pre-packaged app in [release](https://github.com/tensoar/kafka-shake/releases).
 
 ## Project Setup
 

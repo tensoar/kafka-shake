@@ -1,12 +1,12 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
-import { KafkaWokerMessage, KafkaWorkerPayload } from '@shared/types'
+import { KafkaActionResult, KafkaActionPayload } from '@shared/types'
 
 declare global {
     interface Window {
         electron: ElectronAPI
         api: {
             callService: (serviceName: string, method: string, ...args: unknown[]) => unknown,
-            callKafkaAction: (payload: KafkaWorkerPayload) => Promise<KafkaWokerMessage>
+            callKafkaAction: (payload: KafkaActionPayload) => Promise<KafkaActionResult>
         }
     }
 }

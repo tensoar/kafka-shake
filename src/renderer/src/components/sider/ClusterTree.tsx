@@ -1,4 +1,4 @@
-import { Button, Space, Tooltip, Tree, TreeProps } from 'antd'
+import { Button, Space, Tooltip, Tree, TreeProps, App as AntApp } from 'antd'
 import { useCallback, useEffect, useState } from 'react'
 import { SyncOutlined } from '@ant-design/icons'
 import ServiceProxy from '@renderer/util/ServiceProxy'
@@ -9,7 +9,7 @@ import { RootState } from '@renderer/redux/store'
 import { actions } from '@renderer/redux/actions'
 import { ClusterTreeNode } from './types'
 import { useNavigate } from 'react-router'
-import { KafkaWokerMessageFetchTopics } from '@shared/types'
+import { KafkaActionResultFetchTopics } from '@shared/types'
 
 export type ClusterTreeProps = {
     onClusterChecked: TreeProps['onCheck']
@@ -17,6 +17,7 @@ export type ClusterTreeProps = {
 
 export default function ClusterTree({ onClusterChecked }: ClusterTreeProps): React.JSX.Element {
     const treeData = useSelector((rootState: RootState) => rootState.kafkaCluster.clustersTree)
+    const { message } = AntApp.useApp()
     const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([])
     const [loadingKeys, setLoadingKeys] = useState<Set<React.Key>>(new Set())
     const navigate = useNavigate()
@@ -33,6 +34,11 @@ export default function ClusterTree({ onClusterChecked }: ClusterTreeProps): Rea
             const topic = key.substring(spliteIndex + 1)
             const clusterId = key.substring(0, spliteIndex)
             navigate(`cluster/topic/${clusterId}/${topic}`)
+        } else if (node.type === 'cluster-info') {
+            const key = node.key.toString()
+            const spliteIndex = key.indexOf('-')
+            const clusterId = parseInt(key.slice(spliteIndex + 1))
+            navigate(`cluster/info/${clusterId}`)
         }
     }
 
@@ -76,14 +82,19 @@ export default function ClusterTree({ onClusterChecked }: ClusterTreeProps): Rea
                 const result = (await window.api.callKafkaAction({
                     clusterId: clusterId,
                     action: 'fetch-topics'
-                })) as KafkaWokerMessageFetchTopics
+                })) as KafkaActionResultFetchTopics
                 console.log('fetch topics result: ', result)
+                if (!result.sucess) {
+                    message.error(result.errMsg)
+                    return
+                }
                 dispath(
                     actions.kafkaCluster.setClusterTopics({
                         clusterId: clusterId,
                         topics: result.topics
                     })
                 )
+                setExpandedKeys((prev) => [...prev, node.key])
             } catch (e) {
                 console.log(e)
             } finally {
@@ -92,7 +103,6 @@ export default function ClusterTree({ onClusterChecked }: ClusterTreeProps): Rea
                     newSet.delete(key)
                     return newSet
                 })
-                setExpandedKeys((prev) => [...prev, node.key])
             }
         },
         [dispath]

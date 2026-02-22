@@ -2,14 +2,14 @@ import {
     Button,
     Col,
     Form,
-    message,
     Modal,
     Popconfirm,
     Row,
     Space,
     theme,
     Tooltip,
-    Typography
+    Typography,
+    App as AntApp
 } from 'antd'
 import {
     DeleteOutlined,
@@ -23,9 +23,9 @@ import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '../../redux/store'
 import { actions } from '@renderer/redux/actions'
 import _ from 'lodash'
-import { useMemo, useState } from 'react'
-import AddClusterForm from '../forms/AddClusterForm'
-import { AddClusterFormValues } from '../forms/types'
+import { useState } from 'react'
+import ClusterForm from '../forms/AddClusterForm'
+import { ClusterFormValues } from '../forms/types'
 import AbsKafkaCluster from '@shared/entity/AbsKafkaCluster'
 import ServiceProxy from '@renderer/util/ServiceProxy'
 import IKafkaClusterService from '@shared/service/IKafkaClusterService'
@@ -41,21 +41,20 @@ export default function SiderHeader({ checkedClusterKeys }: SiderHeaderProps): R
     const {
         token: { colorBgContainer, borderRadiusLG }
     } = theme.useToken()
+    const { message } = AntApp.useApp()
     const themeStyle = useSelector((state: RootState) => state.theme.themeStyle)
     const dispatch = useDispatch()
     const reversedThemeStyle = themeStyle === 'light' ? 'dark' : 'light'
     const kafkaClusterService = ServiceProxy.get<IKafkaClusterService>(
         ServiceName.KAFKA_CLUSTER_SERVICE
     )
-    const saslConfService = ServiceProxy.get<ISASLConfService>(
-        ServiceName.SASL_CONF_SERVICE
-    )
+    const saslConfService = ServiceProxy.get<ISASLConfService>(ServiceName.SASL_CONF_SERVICE)
 
-    const [addClusterForm] = Form.useForm<AddClusterFormValues>()
+    const [addClusterForm] = Form.useForm<ClusterFormValues>()
     const [addClusterModeOpen, setAddClusterModeOpen] = useState(false)
     const [addClusterFormLoading, setAddClusterFormLoading] = useState(false)
 
-    const onAddClusterFormFinished = async (formValue: AddClusterFormValues) => {
+    const onAddClusterFormFinished = async (formValue: ClusterFormValues) => {
         console.log('formValue: ', formValue)
         setAddClusterFormLoading(true)
         const cluster = AbsKafkaCluster.createDefault()
@@ -170,7 +169,7 @@ export default function SiderHeader({ checkedClusterKeys }: SiderHeaderProps): R
                         shape="square"
                         size="small"
                         style={{ borderRadius: '20%' }}
-                        onClick={() => window.open('https://github.com/tensoar')}
+                        onClick={() => window.open('https://github.com/tensoar/kafka-shake')}
                     />
                 </Tooltip>
             </Space>
@@ -183,7 +182,8 @@ export default function SiderHeader({ checkedClusterKeys }: SiderHeaderProps): R
                 width={800}
                 style={{ paddingTop: 10 }}
             >
-                <AddClusterForm
+                <ClusterForm
+                    type="add"
                     form={addClusterForm}
                     onfinish={onAddClusterFormFinished}
                     loading={addClusterFormLoading}

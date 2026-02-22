@@ -2,11 +2,11 @@ import KafkaClusterService from '@main/db/service/KafkaClusterService'
 import SASLConfService from '@main/db/service/SASLService'
 import {
     IKafkaMessage,
-    KafkaWokerMessage,
-    KafkaWokerMessageFetchMessage,
-    KafkaWokerMessageFetchTopics,
-    KafkaWokerPayloadBase,
-    KafkaWokerPayloadFetchMessage
+    KafkaActionResult,
+    KafkaActionResultFetchMessage,
+    KafkaActionResultFetchTopics,
+    KafkaActionPayloadBase,
+    KafkaActionPayloadFetchMessage
 } from '@shared/types'
 import { BrowserWindow } from 'electron'
 import { Kafka, KafkaConfig, SASLOptions } from 'kafkajs'
@@ -56,25 +56,36 @@ export default class KafkaManager {
         return kafka
     }
 
-    async fetchTopics({ clusterId }: KafkaWokerPayloadBase): Promise<KafkaWokerMessageFetchTopics> {
+    async fetchTopics({
+        clusterId
+    }: KafkaActionPayloadBase): Promise<KafkaActionResultFetchTopics> {
         console.log('fetch topics ...')
         const kafka = await this.getKafkaClient(clusterId)
-        const result: KafkaWokerMessageFetchTopics = {
+        const result: KafkaActionResultFetchTopics = {
             action: 'fetch-topics',
+            sucess: true,
             clusterId,
             topics: []
         }
         if (!kafka) {
+            result.sucess = false
+            result.errMsg = 'Kafka cluster was not found'
             console.error(`No kafka cluster with id ${clusterId}`)
             return result
         }
-        const admin = kafka!.admin()
-        await admin.connect()
-        const topics = await admin.listTopics()
-        result.topics = topics.filter((t) => !t.startsWith('__consumer_offsets'))
-        console.log('topic list: ', topics)
-        await admin.disconnect()
-        return result
+        try {
+            const admin = kafka!.admin()
+            await admin.connect()
+            const topics = await admin.listTopics()
+            result.topics = topics.filter((t) => !t.startsWith('__consumer_offsets'))
+            console.log('topic list: ', topics)
+            await admin.disconnect()
+            return result
+        } catch (e: unknown) {
+            result.sucess = false
+            result.errMsg = `Fetch topics errored: ${(e as Error).message}`
+            return result
+        }
     }
 
     async fetchMessage({
@@ -82,15 +93,18 @@ export default class KafkaManager {
         count,
         topic,
         clusterId
-    }: KafkaWokerPayloadFetchMessage): Promise<KafkaWokerMessageFetchMessage> {
+    }: KafkaActionPayloadFetchMessage): Promise<KafkaActionResultFetchMessage> {
         const kafka = await this.getKafkaClient(clusterId)
-        const result: KafkaWokerMessageFetchMessage = {
+        const result: KafkaActionResultFetchMessage = {
             action: 'fetch-message',
+            sucess: true,
             clusterId,
             topic,
             messages: []
         }
         if (!kafka) {
+            result.sucess = false
+            result.errMsg = 'Kafka cluster was not found'
             console.error(`No kafka cluster with id ${clusterId}`)
             return result
         }
@@ -100,6 +114,8 @@ export default class KafkaManager {
         await admin.disconnect()
 
         if (topicOffsets.length === 0) {
+            result.sucess = false
+            result.errMsg = `Offsets of topic ${topic} is empty`
             console.log('topicOffsets lent is 0 ...')
             return result
         }
@@ -179,8 +195,9 @@ export default class KafkaManager {
         })
 
         const results = await Promise.allSettled(fetchPromises)
-        console.log('results: ', JSON.stringify(results))
+        // console.log('results: ', JSON.stringify(results))
         const allMessages: IKafkaMessage[] = []
+        const erroredPatitions: number[] = []
         results.forEach((result, index) => {
             if (result.status === 'fulfilled') {
                 allMessages.push(...result.value)
@@ -189,18 +206,22 @@ export default class KafkaManager {
                     `Failed to fetch from partition ${topicOffsets[index].partition}:`,
                     result.reason
                 )
+                erroredPatitions.push(topicOffsets[index].partition)
             }
         })
-
         allMessages.sort((a, b) => {
             if (a.partition !== b.partition) return a.partition - b.partition
             return parseInt(a.offset) - parseInt(b.offset)
         })
         result.messages = allMessages
+        if (erroredPatitions.length) {
+            result.sucess = false
+            result.errMsg = `Fetch messages from partition ${erroredPatitions.join('、')} timeout`
+        }
         return result
     }
 
-    handleWokerMessage(message: KafkaWokerMessage) {
+    handleWokerMessage(message: KafkaActionResult) {
         BrowserWindow.getAllWindows().forEach((win) => {
             win.webContents.send(message.action, message)
         })

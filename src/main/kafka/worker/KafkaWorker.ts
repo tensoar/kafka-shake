@@ -1,5 +1,5 @@
 import { KafkaWokerData } from '@main/types'
-import { IKafkaMessage, KafkaWokerMessage, KafkaWokerMessageFetchMessage, KafkaWokerPayloadFetchMessage, KafkaWorkerPayload } from '@shared/types'
+import { IKafkaMessage, KafkaActionResult, KafkaActionResultFetchMessage, KafkaActionPayloadFetchMessage, KafkaActionPayload } from '@shared/types'
 import { Consumer, Kafka, KafkaConfig, SASLOptions } from 'kafkajs'
 import { parentPort, workerData } from 'worker_threads'
 import _ from 'lodash'
@@ -52,7 +52,7 @@ async function fetchMessage({
     direction,
     count,
     topic
-}: KafkaWokerPayloadFetchMessage) {
+}: KafkaActionPayloadFetchMessage) {
     if (!kafka) {
         await initKafka()
     }
@@ -164,22 +164,22 @@ async function disconnect() {
     process.exit(0)
 }
 
-parentPort?.on('message', async (payload: KafkaWorkerPayload) => {
+parentPort?.on('message', async (payload: KafkaActionPayload) => {
     try {
-        let result: KafkaWokerMessage
+        let result: KafkaActionResult
         if (payload.action == 'fetch-message') {
             const messages = await fetchMessage(payload)
             result = {
                 clusterId: payload.clusterId,
                 topic: payload.topic,
                 messages: messages || []
-            } as KafkaWokerMessageFetchMessage
+            } as KafkaActionResultFetchMessage
         } else {
             result = {
                 clusterId: payload.clusterId,
                 topic: payload.topic,
                 messages: []
-            } as unknown as KafkaWokerMessageFetchMessage
+            } as unknown as KafkaActionResultFetchMessage
         }
         parentPort?.postMessage(result)
     } catch (e) {

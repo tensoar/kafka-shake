@@ -4,8 +4,8 @@ import { actions } from '@renderer/redux/actions'
 import kafkaUtil from '@renderer/util/KafkaUtil'
 import {
     IKafkaMessage,
-    KafkaWokerMessageFetchMessage,
-    KafkaWokerPayloadFetchMessage
+    KafkaActionResultFetchMessage,
+    KafkaActionPayloadFetchMessage
 } from '@shared/types'
 import {
     Button,
@@ -17,9 +17,10 @@ import {
     Table,
     TableProps,
     DatePicker,
-    Card
+    Card,
+    App as AntApp
 } from 'antd'
-import { SearchOutlined, SendOutlined } from '@ant-design/icons'
+import { SendOutlined } from '@ant-design/icons'
 import { useCallback, useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { useParams } from 'react-router'
@@ -32,8 +33,9 @@ import { ColumnsType } from 'antd/es/table'
 export default function TopicMain() {
     const { clusterId, topicName } = useParams<{ clusterId: string; topicName: string }>()
     const messages = useTopicMessages(parseInt(clusterId as string), topicName as string)
+    const { message } = AntApp.useApp()
     const [filteredMessages, setFilteredMessages] = useState<IKafkaMessage[]>([])
-    const [payload, setPayload] = useState<KafkaWokerPayloadFetchMessage>({
+    const [payload, setPayload] = useState<KafkaActionPayloadFetchMessage>({
         action: 'fetch-message',
         direction: 'latest',
         count: 500,
@@ -99,7 +101,7 @@ export default function TopicMain() {
         }
     ])
 
-    const setPayloadValue = (v: number | string, key: keyof KafkaWokerPayloadFetchMessage) => {
+    const setPayloadValue = (v: number | string, key: keyof KafkaActionPayloadFetchMessage) => {
         setPayload((pre) => ({
             ...pre,
             [key]: v
@@ -247,7 +249,7 @@ export default function TopicMain() {
                             size="small"
                             icon={<SendOutlined />}
                             onClick={async () => {
-                                const payload: KafkaWokerPayloadFetchMessage = {
+                                const payload: KafkaActionPayloadFetchMessage = {
                                     clusterId: parseInt(clusterId as string),
                                     topic: topicName as string,
                                     count: 10,
@@ -255,14 +257,16 @@ export default function TopicMain() {
                                     action: 'fetch-message'
                                 }
                                 const data = await window.api.callKafkaAction(payload)
-                                console.log('fetch data: ', data)
+                                if (!data.sucess) {
+                                    message.error(data.errMsg)
+                                }
                                 dispath(
                                     actions.kafkaMessage.initMessage({
                                         topicId: kafkaUtil.buildTopicId(
                                             clusterId as string,
                                             topicName as string
                                         ),
-                                        message: (data as KafkaWokerMessageFetchMessage)
+                                        message: (data as KafkaActionResultFetchMessage)
                                             .messages as IKafkaMessage[]
                                     })
                                 )

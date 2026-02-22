@@ -1,5 +1,4 @@
-import AbsKafkaCluster from '@shared/entity/AbsKafkaCluster'
-import { AddClusterFormProps } from './types'
+import { ClusterFormProps } from './types'
 import { Button, Form, Input, Select, Switch } from 'antd'
 
 const saslOptions = [
@@ -9,7 +8,7 @@ const saslOptions = [
     { label: 'SCRAM-SHA-512', value: 'scram-sha-512' }
 ]
 
-export default function AddClusterForm({ form, onfinish, loading = false }: AddClusterFormProps) {
+export default function ClusterForm({ form, onfinish, type, loading = false }: ClusterFormProps) {
     const saslMechanism = Form.useWatch('saslMechanism', form)
     const showSaslCreds = saslMechanism && saslMechanism !== 'none'
 
@@ -37,12 +36,21 @@ export default function AddClusterForm({ form, onfinish, loading = false }: AddC
                 /> */}
             </Form.Item>
 
-            <Form.Item name="clientId" label="Client ID">
+            <Form.Item
+                name="clientId"
+                label="Client ID"
+                tooltip="If left blank, a random client id will be generated at runtime."
+            >
                 <Input placeholder="<Random>" />
             </Form.Item>
 
-            <Form.Item name="useSSL" label="Use SSL" valuePropName="checked">
-                <Switch />
+            <Form.Item
+                name="useSSL"
+                label="Use SSL"
+                valuePropName="checked"
+                tooltip="This feature has not yet been implemented."
+            >
+                <Switch disabled />
             </Form.Item>
 
             <Form.Item
@@ -66,16 +74,16 @@ export default function AddClusterForm({ form, onfinish, loading = false }: AddC
                     <Form.Item
                         name="saslPassword"
                         label="Password"
-                        rules={[{ required: true, message: "Password can't be empty" }]}
+                        rules={[{ required: type === 'add', message: "Password can't be empty" }]}
                     >
-                        <Input.Password />
+                        <Input.Password placeholder={type === 'update' ? '<keep secret>' : ''} />
                     </Form.Item>
                 </>
             )}
 
             <Form.Item>
                 <Button type="primary" htmlType="submit" loading={loading}>
-                    Add
+                    {type == 'add' ? 'Add' : 'Update'}
                 </Button>
             </Form.Item>
         </Form>
