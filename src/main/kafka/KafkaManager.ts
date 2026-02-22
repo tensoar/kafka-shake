@@ -6,7 +6,8 @@ import {
     KafkaActionResultFetchMessage,
     KafkaActionResultFetchTopics,
     KafkaActionPayloadBase,
-    KafkaActionPayloadFetchMessage
+    KafkaActionPayloadFetchMessage,
+    KafkaActionResultClearClient
 } from '@shared/types'
 import { BrowserWindow } from 'electron'
 import { Kafka, KafkaConfig, SASLOptions } from 'kafkajs'
@@ -54,6 +55,16 @@ export default class KafkaManager {
         }
         const kafka = new Kafka(kafkaConfig)
         return kafka
+    }
+
+    clearKafkaClient(clusterId: number): KafkaActionResultClearClient {
+        console.log('Clear client for clust: ', clusterId)
+        this.kafkaClients.delete(clusterId)
+        return {
+            clusterId,
+            action: 'clear-client',
+            sucess: true
+        }
     }
 
     async fetchTopics({

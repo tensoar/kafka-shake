@@ -97,7 +97,7 @@ const kafkaClusterSlice = createSlice({
                 console.log(`No topics node was found with key: `, `topics-` + clusterId)
                 return
             }
-            topicsNode.children = topics.map(t => ({
+            topicsNode.children = topics.map((t) => ({
                 title: t,
                 isLeaf: true,
                 key: clusterId + ':' + t,

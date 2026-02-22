@@ -78,6 +78,10 @@ export default function ClusterMain() {
                     }
                     await saslConfService.saveOne(saslConfToUpdate)
                 }
+                await window.api.callKafkaAction({
+                    clusterId: id,
+                    action: 'clear-client'
+                })
                 message.success('Update kafka cluster success')
                 console.log('cluster: ', clusterAdded)
             } catch (e: unknown) {

@@ -43,10 +43,15 @@ export interface KafkaActionPayloadFectchTopics extends KafkaActionPayloadBase {
     action: 'fetch-topics'
 }
 
+export interface KafkaActionPayloadClearClient extends KafkaActionPayloadBase {
+    action: 'clear-client'
+}
+
 export type KafkaActionPayload =
     | KafkaActionPayloadStartConsumer
     | KafkaActionPayloadFetchMessage
     | KafkaActionPayloadFectchTopics
+    | KafkaActionPayloadClearClient
 
 export interface KafkaActionResultBase {
     clusterId: number
@@ -71,7 +76,12 @@ export interface KafkaActionResultFetchTopics extends KafkaActionResultBase {
     topics: string[]
 }
 
+export interface KafkaActionResultClearClient extends KafkaActionResultBase {
+    action: 'clear-client'
+}
+
 export type KafkaActionResult =
     | KafkaActionResultStartConsumer
     | KafkaActionResultFetchMessage
     | KafkaActionResultFetchTopics
+    | KafkaActionResultClearClient

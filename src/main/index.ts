@@ -77,6 +77,8 @@ app.whenReady().then(async () => {
             return kafkaManager.fetchMessage(payload)
         } else if (payload.action === 'fetch-topics') {
             return kafkaManager.fetchTopics(payload)
+        } else if (payload.action === 'clear-client') {
+            return kafkaManager.clearKafkaClient(payload.clusterId)
         }
         return
     })

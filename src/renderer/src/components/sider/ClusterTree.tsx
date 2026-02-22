@@ -19,7 +19,7 @@ export default function ClusterTree({ onClusterChecked }: ClusterTreeProps): Rea
     const treeData = useSelector((rootState: RootState) => rootState.kafkaCluster.clustersTree)
     const { message } = AntApp.useApp()
     const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([])
-    const [loadingKeys, setLoadingKeys] = useState<Set<React.Key>>(new Set())
+    const [refreshLoading, setRefreshLoading] = useState(false)
     const navigate = useNavigate()
     const dispath = useDispatch()
     const kafkaClusterService = ServiceProxy.get<IKafkaClusterService>(
@@ -53,6 +53,7 @@ export default function ClusterTree({ onClusterChecked }: ClusterTreeProps): Rea
                                 icon={<SyncOutlined />}
                                 type="text"
                                 size="small"
+                                loading={refreshLoading}
                                 onClick={async (e) => {
                                     e.stopPropagation()
                                     e.preventDefault()
@@ -78,7 +79,7 @@ export default function ClusterTree({ onClusterChecked }: ClusterTreeProps): Rea
                     return
                 }
                 const clusterId = parseInt((key as string).split('-')[1])
-                setLoadingKeys((prev) => new Set(prev).add(key))
+                setRefreshLoading(true)
                 const result = (await window.api.callKafkaAction({
                     clusterId: clusterId,
                     action: 'fetch-topics'
@@ -86,7 +87,8 @@ export default function ClusterTree({ onClusterChecked }: ClusterTreeProps): Rea
                 console.log('fetch topics result: ', result)
                 if (!result.sucess) {
                     message.error(result.errMsg)
-                    return
+                    setExpandedKeys((prev) => prev.filter((k) => k !== node.key))
+                    throw Error(result.errMsg)
                 }
                 dispath(
                     actions.kafkaCluster.setClusterTopics({
@@ -94,16 +96,21 @@ export default function ClusterTree({ onClusterChecked }: ClusterTreeProps): Rea
                         topics: result.topics
                     })
                 )
+                setRefreshLoading(false)
                 setExpandedKeys((prev) => [...prev, node.key])
             } catch (e) {
                 console.log(e)
-            } finally {
-                setLoadingKeys((prev) => {
-                    const newSet = new Set(prev)
-                    newSet.delete(key)
-                    return newSet
-                })
+                setRefreshLoading(false)
+                message.error(`Fetch topics errored: ${(e as Error).message}`)
+                throw e
             }
+            //  finally {
+            //     setLoadingKeys((prev) => {
+            //         const newSet = new Set(prev)
+            //         newSet.delete(key)
+            //         return newSet
+            //     })
+            // }
         },
         [dispath]
     )
@@ -111,31 +118,33 @@ export default function ClusterTree({ onClusterChecked }: ClusterTreeProps): Rea
     const onLoadData = useCallback(
         async (node: ClusterTreeNode) => {
             const key = node.key
-            try {
-                if (node.type === 'cluster-topic') {
-                    if (!node.children || node.children.length < 1) {
-                        await refreshTopics(node)
-                    }
-                } else {
-                    // TODO
+            if (node.children && node.children.length > 0) {
+                return
+            }
+            if (node.type === 'cluster-topic') {
+                if (!node.children || node.children.length < 1) {
+                    await refreshTopics(node)
                 }
-            } catch (e) {
-                console.log(e)
+            } else {
+                // TODO
             }
         },
         [refreshTopics]
     )
 
-    const onExpand = useCallback(
-        async (keys: React.Key[], info) => {
-            if (info.expanded) {
-                const node = info.node as ClusterTreeNode
-                await onLoadData(node)
-            }
-            setExpandedKeys(keys)
-        },
-        [onLoadData]
-    )
+    const onExpand = (keys: React.Key[], info) => {
+        // if (info.expanded) {
+        //     const node = info.node as ClusterTreeNode
+        //     if (node.type == 'cluster-topic') {
+        //         await onLoadData(node)
+        //     } else {
+        //         setExpandedKeys(keys)
+        //     }
+        // } else {
+        //     setExpandedKeys(keys)
+        // }
+        setExpandedKeys(keys)
+    }
 
     useEffect(() => {
         const loadTreeData = async () => {
@@ -155,9 +164,9 @@ export default function ClusterTree({ onClusterChecked }: ClusterTreeProps): Rea
             showIcon={true}
             onCheck={onClusterChecked}
             onClick={onClusterClick}
-            // loadData={onLoadData}
+            loadData={onLoadData}
             treeData={treeData}
-            loadedKeys={Array.from(loadingKeys)}
+            // loadingKeys={Array.from(loadingKeys)}
             titleRender={titleRender}
         />
     )
