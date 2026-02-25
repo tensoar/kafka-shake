@@ -96,10 +96,23 @@ export default function TopicMain() {
             sortDirections: ['ascend', 'descend'],
             width: 160,
             render: (value: string) => (
-                <span>{DateTime.fromMillis(parseInt(value)).toFormat('yyyy-LL-dd mm:hh:ss')}</span>
+                <span>{DateTime.fromMillis(parseInt(value)).toFormat('yyyy-LL-dd HH:mm:ss')}</span>
             )
         }
     ])
+
+    const fetchMessages = useCallback(async () => {
+        const data = await window.api.callKafkaAction(payload)
+        if (!data.sucess) {
+            message.error(data.errMsg)
+        }
+        dispath(
+            actions.kafkaMessage.initMessage({
+                topicId: kafkaUtil.buildTopicId(clusterId as string, topicName as string),
+                message: (data as KafkaActionResultFetchMessage).messages as IKafkaMessage[]
+            })
+        )
+    }, [payload, clusterId, topicName, dispath, message])
 
     const setPayloadValue = (v: number | string, key: keyof KafkaActionPayloadFetchMessage) => {
         setPayload((pre) => ({
@@ -248,29 +261,7 @@ export default function TopicMain() {
                             type="primary"
                             size="small"
                             icon={<SendOutlined />}
-                            onClick={async () => {
-                                const payload: KafkaActionPayloadFetchMessage = {
-                                    clusterId: parseInt(clusterId as string),
-                                    topic: topicName as string,
-                                    count: 10,
-                                    direction: 'latest',
-                                    action: 'fetch-message'
-                                }
-                                const data = await window.api.callKafkaAction(payload)
-                                if (!data.sucess) {
-                                    message.error(data.errMsg)
-                                }
-                                dispath(
-                                    actions.kafkaMessage.initMessage({
-                                        topicId: kafkaUtil.buildTopicId(
-                                            clusterId as string,
-                                            topicName as string
-                                        ),
-                                        message: (data as KafkaActionResultFetchMessage)
-                                            .messages as IKafkaMessage[]
-                                    })
-                                )
-                            }}
+                            onClick={fetchMessages}
                         >
                             Fetch
                         </Button>
