@@ -35,6 +35,7 @@ export default function TopicMain() {
     const messages = useTopicMessages(parseInt(clusterId as string), topicName as string)
     const { message } = AntApp.useApp()
     const [filteredMessages, setFilteredMessages] = useState<IKafkaMessage[]>([])
+    const [fetchLoading, setFetchLoading] = useState(false)
     const [payload, setPayload] = useState<KafkaActionPayloadFetchMessage>({
         action: 'fetch-message',
         direction: 'latest',
@@ -63,14 +64,26 @@ export default function TopicMain() {
             dataIndex: 'offset',
             key: 'offset',
             sortDirections: ['ascend', 'descend'],
-            width: 60
+            width: 90
         },
         {
             title: 'Key',
             dataIndex: 'key',
             key: 'key',
             sortDirections: ['ascend', 'descend'],
-            width: 60
+            width: 60,
+            render: (key: string) => (
+                <div
+                    style={{
+                        whiteSpace: 'nowrap',
+                        overflowX: 'auto',
+                        maxWidth: '100%',
+                        scrollbarWidth: 'thin'
+                    }}
+                >
+                    {key}
+                </div>
+            )
         },
         {
             title: 'Value',
@@ -102,16 +115,22 @@ export default function TopicMain() {
     ])
 
     const fetchMessages = useCallback(async () => {
-        const data = await window.api.callKafkaAction(payload)
-        if (!data.sucess) {
-            message.error(data.errMsg)
+        try {
+            setFetchLoading(true)
+            const data = await window.api.callKafkaAction(payload)
+            if (!data.sucess) {
+                message.error(data.errMsg)
+            }
+            dispath(
+                actions.kafkaMessage.initMessage({
+                    topicId: kafkaUtil.buildTopicId(clusterId as string, topicName as string),
+                    message: (data as KafkaActionResultFetchMessage).messages as IKafkaMessage[]
+                })
+            )
+        } catch (e) {
+            message.error(`Fetch errred: ${(e as Error).message}`)
         }
-        dispath(
-            actions.kafkaMessage.initMessage({
-                topicId: kafkaUtil.buildTopicId(clusterId as string, topicName as string),
-                message: (data as KafkaActionResultFetchMessage).messages as IKafkaMessage[]
-            })
-        )
+        setFetchLoading(false)
     }, [payload, clusterId, topicName, dispath, message])
 
     const setPayloadValue = (v: number | string, key: keyof KafkaActionPayloadFetchMessage) => {
@@ -260,6 +279,7 @@ export default function TopicMain() {
                         <Button
                             type="primary"
                             size="small"
+                            loading={fetchLoading}
                             icon={<SendOutlined />}
                             onClick={fetchMessages}
                         >
@@ -288,7 +308,7 @@ export default function TopicMain() {
                             />
                         </Space>
                         <Space>
-                            <Typography.Text strong>Date:</Typography.Text>
+                            <Typography.Text strong>Timestamp:</Typography.Text>
                             <DatePicker.RangePicker
                                 style={{ width: 320 }}
                                 showTime
