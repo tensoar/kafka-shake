@@ -197,10 +197,7 @@ export default function TopicMain() {
     }
 
     const filterMessages = useCallback(() => {
-        console.log('filterMessages ...')
         let result = [...messages]
-        console.log('result: ', result)
-        console.log('searchOptions: ', searchOptions)
         // 按 Key 过滤
         if (searchOptions.key) {
             result = result.filter((msg) =>
@@ -341,6 +338,7 @@ export default function TopicMain() {
                     flexDirection: 'column',
                     marginTop: 15
                 }}
+                className="common-scroll-container"
             >
                 <Table
                     bordered

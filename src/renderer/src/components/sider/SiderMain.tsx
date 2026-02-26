@@ -35,6 +35,7 @@ export default function SiderMain(): React.JSX.Element {
                     background: colorBgContainer,
                     borderRadius: borderRadiusLG
                 }}
+                className="common-scroll-container"
             >
                 <ClusterTree
                     onClusterChecked={(checkedKeys) => {
