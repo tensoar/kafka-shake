@@ -29,7 +29,7 @@ export default function ResizableTitle(props: ResizableTitleProps) {
             onResize={onResize}
             draggableOpts={{ enableUserSelectHack: false }}
         >
-            <th {...restProps} />
+            <th {...restProps} style={{ ...restProps.style, width }} />
         </Resizable>
     )
 }

@@ -18,9 +18,10 @@ import {
     TableProps,
     DatePicker,
     Card,
-    App as AntApp
+    App as AntApp,
+    Tooltip
 } from 'antd'
-import { SendOutlined } from '@ant-design/icons'
+import { ControlOutlined, SearchOutlined, SendOutlined } from '@ant-design/icons'
 import { useCallback, useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { useParams } from 'react-router'
@@ -35,6 +36,8 @@ export default function TopicMain() {
     const messages = useTopicMessages(parseInt(clusterId as string), topicName as string)
     const { message } = AntApp.useApp()
     const [filteredMessages, setFilteredMessages] = useState<IKafkaMessage[]>([])
+    const [detailRecord, setDetailRecord] = useState<IKafkaMessage | null>()
+    const [detailModeOpen, setDetailModeOpen] = useState(false)
     const [fetchLoading, setFetchLoading] = useState(false)
     const [payload, setPayload] = useState<KafkaActionPayloadFetchMessage>({
         action: 'fetch-message',
@@ -54,24 +57,56 @@ export default function TopicMain() {
 
     const [tableColums, setTableColums] = useState<TableProps<IKafkaMessage>['columns']>([
         {
-            title: 'Partition',
+            title: (
+                <span
+                    style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                >
+                    Partition
+                </span>
+            ),
             dataIndex: 'partition',
             key: 'partition',
-            width: 80
+            width: 60,
+            onCell: () => ({
+                style: {
+                    overflow: 'hidden',
+                    whiteSpace: 'normal',
+                    textOverflow: 'ellipsis'
+                }
+            })
         },
         {
-            title: 'Offset',
+            title: (
+                <span
+                    style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                >
+                    Offset
+                </span>
+            ),
             dataIndex: 'offset',
             key: 'offset',
+            width: 90,
             sortDirections: ['ascend', 'descend'],
-            width: 90
+            onCell: () => ({
+                style: {
+                    overflow: 'hidden',
+                    whiteSpace: 'normal',
+                    textOverflow: 'ellipsis'
+                }
+            })
         },
         {
-            title: 'Key',
+            title: (
+                <span
+                    style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                >
+                    Key
+                </span>
+            ),
             dataIndex: 'key',
             key: 'key',
             sortDirections: ['ascend', 'descend'],
-            width: 60,
+            width: 80,
             render: (key: string) => (
                 <div
                     style={{
@@ -81,12 +116,18 @@ export default function TopicMain() {
                         scrollbarWidth: 'thin'
                     }}
                 >
-                    {key}
+                    <Tooltip title={key}>{key}</Tooltip>
                 </div>
             )
         },
         {
-            title: 'Value',
+            title: (
+                <span
+                    style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                >
+                    Value
+                </span>
+            ),
             dataIndex: 'value',
             key: 'value',
             render: (value: string) => (
@@ -103,13 +144,48 @@ export default function TopicMain() {
             )
         },
         {
-            title: 'Timestamp',
+            title: (
+                <span
+                    style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                >
+                    Timestamp
+                </span>
+            ),
             dataIndex: 'timestamp',
             key: 'timestamp',
             sortDirections: ['ascend', 'descend'],
-            width: 160,
+            width: 140,
+            onCell: () => ({
+                style: {
+                    overflow: 'hidden',
+                    whiteSpace: 'normal',
+                    textOverflow: 'ellipsis'
+                }
+            }),
             render: (value: string) => (
-                <span>{DateTime.fromMillis(parseInt(value)).toFormat('yyyy-LL-dd HH:mm:ss')}</span>
+                <span
+                    style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                >
+                    {DateTime.fromMillis(parseInt(value)).toFormat('yyyy-LL-dd HH:mm:ss')}
+                </span>
+            )
+        },
+        {
+            title: <ControlOutlined />,
+            key: 'control',
+            width: 40,
+            render: (__, record: IKafkaMessage) => (
+                <Tooltip title="View detail">
+                    <Button
+                        type="text"
+                        size="small"
+                        icon={<SearchOutlined />}
+                        onClick={() => {
+                            setDetailRecord(record)
+                            setDetailModeOpen(true)
+                        }}
+                    />
+                </Tooltip>
             )
         }
     ])
@@ -186,7 +262,7 @@ export default function TopicMain() {
         ...col,
         onHeaderCell: (column: ColumnsType<IKafkaMessage>[number]) => ({
             width: column!.width,
-            onResize: handleResize(index),
+            onResize: handleResize(index)
         })
     }))
 
@@ -215,8 +291,8 @@ export default function TopicMain() {
         // 按时间范围过滤
         if (searchOptions.startTime && searchOptions.endTime) {
             result = result.filter((msg) => {
-                const msgTime = parseInt(msg.timestamp); // 假设 timestamp 是毫秒时间戳
-                return msgTime >= searchOptions.startTime && msgTime <= searchOptions.endTime;
+                const msgTime = parseInt(msg.timestamp) // 假设 timestamp 是毫秒时间戳
+                return msgTime >= searchOptions.startTime && msgTime <= searchOptions.endTime
             })
         }
         setFilteredMessages(result)

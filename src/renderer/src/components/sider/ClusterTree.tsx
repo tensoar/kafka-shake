@@ -67,7 +67,7 @@ export default function ClusterTree({ onClusterChecked }: ClusterTreeProps): Rea
                 </div>
             )
         } else {
-            return <span>{node.title as string}</span>
+            return <span style={{ whiteSpace: 'nowrap' }}>{node.title as string}</span>
         }
     }
 
