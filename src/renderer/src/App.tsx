@@ -25,7 +25,10 @@ export default function App(): React.JSX.Element {
     return (
         <ConfigProvider
             theme={{
-                algorithm: themeStyle === 'light' ? theme.defaultAlgorithm : theme.darkAlgorithm
+                algorithm: themeStyle === 'light' ? theme.defaultAlgorithm : theme.darkAlgorithm,
+                token: {
+                    fontSize: 13
+                }
             }}
         >
             <AntApp>
