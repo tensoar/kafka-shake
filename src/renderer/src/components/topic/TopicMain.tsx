@@ -19,7 +19,8 @@ import {
     DatePicker,
     Card,
     App as AntApp,
-    Tooltip
+    Tooltip,
+    Modal
 } from 'antd'
 import { ControlOutlined, SearchOutlined, SendOutlined } from '@ant-design/icons'
 import { useCallback, useEffect, useState } from 'react'
@@ -30,13 +31,14 @@ import { DateTime } from 'luxon'
 import { ResizeCallbackData } from 'react-resizable'
 import ResizableTitle from './ResizableTitle'
 import { ColumnsType } from 'antd/es/table'
+import MessageDetail from './MessageDetail'
 
 export default function TopicMain() {
     const { clusterId, topicName } = useParams<{ clusterId: string; topicName: string }>()
     const messages = useTopicMessages(parseInt(clusterId as string), topicName as string)
     const { message } = AntApp.useApp()
     const [filteredMessages, setFilteredMessages] = useState<IKafkaMessage[]>([])
-    const [detailRecord, setDetailRecord] = useState<IKafkaMessage | null>()
+    const [detailRecord, setDetailRecord] = useState<IKafkaMessage | null>(null)
     const [detailModeOpen, setDetailModeOpen] = useState(false)
     const [fetchLoading, setFetchLoading] = useState(false)
     const [payload, setPayload] = useState<KafkaActionPayloadFetchMessage>({
@@ -190,6 +192,11 @@ export default function TopicMain() {
         }
     ])
 
+    const closeDetailMode = () => {
+        setDetailRecord(null)
+        setDetailModeOpen(false)
+    }
+
     const fetchMessages = useCallback(async () => {
         try {
             setFetchLoading(true)
@@ -291,7 +298,7 @@ export default function TopicMain() {
         // 按时间范围过滤
         if (searchOptions.startTime && searchOptions.endTime) {
             result = result.filter((msg) => {
-                const msgTime = parseInt(msg.timestamp) // 假设 timestamp 是毫秒时间戳
+                const msgTime = msg.timestamp
                 return msgTime >= searchOptions.startTime && msgTime <= searchOptions.endTime
             })
         }
@@ -432,6 +439,31 @@ export default function TopicMain() {
                     style={{ height: '100%', width: '100%' }}
                 />
             </div>
+            <Modal
+                title="Message Detail"
+                open={detailModeOpen}
+                onOk={closeDetailMode}
+                onCancel={closeDetailMode}
+                width="80%"
+                height="60vh"
+                style={{
+                    maxWidth: '80%',
+                    marginTop: -80
+                }}
+                footer={[
+                    <Button key="btn-close-message-detail" type="primary" onClick={closeDetailMode}>
+                        Close
+                    </Button>
+                ]}
+            >
+                <div
+                    style={{
+                        height: '75vh'
+                    }}
+                >
+                    <MessageDetail message={detailRecord} />
+                </div>
+            </Modal>
         </div>
     )
 }

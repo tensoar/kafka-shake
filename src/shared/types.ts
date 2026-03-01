@@ -3,11 +3,11 @@ export type Mechainsm = 'plain' | 'scram-sha-256' | 'scram-sha-512' | 'oauthbear
 export type SSLSourceType = 'file' | 'value'
 
 export interface IKafkaMessage {
-    offset: string
+    offset: number
     partition: number
     key: string
     value: string
-    timestamp: string
+    timestamp: number
 }
 
 export interface IKafkaMessageDiaptchType {

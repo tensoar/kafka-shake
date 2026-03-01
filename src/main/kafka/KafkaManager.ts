@@ -178,10 +178,10 @@ export default class KafkaManager {
                     console.log('message: ', message)
                     messages.push({
                         partition,
-                        offset: message.offset,
+                        offset: parseInt(message.offset),
                         key: message.key?.toString() || '',
                         value: message.value?.toString() || '',
-                        timestamp: message.timestamp
+                        timestamp: parseInt(message.timestamp)
                         // headers: message.headers
                     })
                     receivedCount++
@@ -220,10 +220,7 @@ export default class KafkaManager {
                 erroredPatitions.push(topicOffsets[index].partition)
             }
         })
-        allMessages.sort((a, b) => {
-            if (a.partition !== b.partition) return a.partition - b.partition
-            return parseInt(a.offset) - parseInt(b.offset)
-        })
+        allMessages.sort((a, b) =>b.timestamp - a.timestamp)
         result.messages = allMessages
         if (erroredPatitions.length) {
             result.sucess = false
