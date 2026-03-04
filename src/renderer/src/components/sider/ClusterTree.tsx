@@ -1,6 +1,6 @@
 import { Button, Space, Tooltip, Tree, TreeProps, App as AntApp } from 'antd'
 import { useCallback, useEffect, useState } from 'react'
-import { SyncOutlined } from '@ant-design/icons'
+import { BulbOutlined, SyncOutlined, TagOutlined } from '@ant-design/icons'
 import ServiceProxy from '@renderer/util/ServiceProxy'
 import { ServiceName } from '@shared/service/Constants'
 import IKafkaClusterService from '@shared/service/IKafkaClusterService'
@@ -33,6 +33,7 @@ export default function ClusterTree({ onClusterChecked }: ClusterTreeProps): Rea
             const spliteIndex = key.indexOf(':')
             const topic = key.substring(spliteIndex + 1)
             const clusterId = key.substring(0, spliteIndex)
+            dispath(actions.kafkaCluster.setSelectedTopic(topic))
             navigate(`cluster/topic/${clusterId}/${topic}`)
         } else if (node.type === 'cluster-info') {
             const key = node.key.toString()
@@ -65,6 +66,20 @@ export default function ClusterTree({ onClusterChecked }: ClusterTreeProps): Rea
                         </Tooltip>
                     </Space>
                 </div>
+            )
+        } else if (node.type === 'topic-item') {
+            return (
+                <Space size="small">
+                    <TagOutlined />
+                    <span style={{ whiteSpace: 'nowrap' }}>{node.title as string}</span>
+                </Space>
+            )
+        } else if (node.type === 'cluster-info') {
+            return (
+                <Space size="small">
+                    <BulbOutlined />
+                    <span style={{ whiteSpace: 'nowrap' }}>{node.title as string}</span>
+                </Space>
             )
         } else {
             return <span style={{ whiteSpace: 'nowrap' }}>{node.title as string}</span>

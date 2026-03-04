@@ -20,11 +20,12 @@ import {
     Card,
     App as AntApp,
     Tooltip,
-    Modal
+    Modal,
+    Tag
 } from 'antd'
 import { ControlOutlined, SearchOutlined, SendOutlined } from '@ant-design/icons'
 import { useCallback, useEffect, useState } from 'react'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { useParams } from 'react-router'
 import _ from 'lodash'
 import { DateTime } from 'luxon'
@@ -32,10 +33,12 @@ import { ResizeCallbackData } from 'react-resizable'
 import ResizableTitle from './ResizableTitle'
 import { ColumnsType } from 'antd/es/table'
 import MessageDetail from './MessageDetail'
+import { RootState } from '@renderer/redux/store'
 
 export default function TopicMain() {
     const { clusterId, topicName } = useParams<{ clusterId: string; topicName: string }>()
     const messages = useTopicMessages(parseInt(clusterId as string), topicName as string)
+    const selectedTopic = useSelector((state: RootState) => state.kafkaCluster.selectedTopic)
     const { message } = AntApp.useApp()
     const [filteredMessages, setFilteredMessages] = useState<IKafkaMessage[]>([])
     const [detailRecord, setDetailRecord] = useState<IKafkaMessage | null>(null)
@@ -164,11 +167,11 @@ export default function TopicMain() {
                     textOverflow: 'ellipsis'
                 }
             }),
-            render: (value: string) => (
+            render: (value: number) => (
                 <span
                     style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
                 >
-                    {DateTime.fromMillis(parseInt(value)).toFormat('yyyy-LL-dd HH:mm:ss')}
+                    {DateTime.fromMillis(value).toFormat('yyyy-LL-dd HH:mm:ss')}
                 </span>
             )
         },
@@ -367,7 +370,17 @@ export default function TopicMain() {
                         </Button>
                     </Space>
                 </Space>
-                <Card title="Filter Messages" size="small">
+                <Card
+                    title={
+                        <Space>
+                            <Typography.Text strong>Filter Messages</Typography.Text>
+                            <Tag key="topic-value" color="cyan" variant="filled">
+                                {selectedTopic}
+                            </Tag>
+                        </Space>
+                    }
+                    size="small"
+                >
                     <Space>
                         <Space>
                             <Typography.Text strong>Key:</Typography.Text>

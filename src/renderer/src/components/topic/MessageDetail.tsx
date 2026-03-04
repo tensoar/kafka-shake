@@ -9,6 +9,8 @@ import 'ace-builds/src-noconflict/ext-language_tools'
 import '../../assets/topic.css'
 import { useSelector } from 'react-redux'
 import { RootState } from '@renderer/redux/store'
+import { DateTime } from 'luxon'
+import _ from 'lodash'
 
 interface MessageDetailProps {
     message: IKafkaMessage | null
@@ -25,14 +27,23 @@ export default function MessageDetail({ message }: MessageDetailProps) {
             key: 'detail-key',
             label: 'Key',
             children: message?.key || ''
-        }, {
+        },
+        {
             key: 'detail-offset',
             label: 'Offset',
-            children: message?.offset || ''
-        }, {
+            children: _.isNil(message?.offset) ? '' : message?.offset
+        },
+        {
             key: 'detail-partition',
             label: 'Partition',
-            children: message?.partition || ''
+            children: _.isNil(message?.partition) ? '' : message?.partition
+        },
+        {
+            key: 'Timestamp',
+            label: 'Timestamp',
+            children: message?.timestamp
+                ? DateTime.fromMillis(message!.timestamp).toFormat('yyyy-LL-dd HH:mm:ss')
+                : ''
         }
     ]
 
